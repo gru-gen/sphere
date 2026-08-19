@@ -1,0 +1,29 @@
+@host = http://localhost:5100
+
+### Browse the catalog - expect 200 OK with one page of products
+GET {{host}}/api/products?pageSize=5
+
+### One product by id - expect 200 OK
+GET {{host}}/api/products/01a01a27-487b-71d6-b572-8967a4bf8f7a
+
+### Unknown id - expect 404 Not Found
+GET {{host}}/api/products/00000000-0000-0000-0000-000000000000
+
+### All categories - expect 200 OK
+GET {{host}}/api/categories
+
+### Create a valid product - expect 201 Created and a Location header
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "sku": "SHP-901", "name": "Comet Runner", "price": 79.90,
+  "categoryId": "01a01a27-4879-7320-8b1b-46391fd17c8a"
+}
+
+### Create an invalid product - expect 400 with an errors dictionary
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "sku": "bad sku", "name": "", "price": 0,
+  "categoryId": "00000000-0000-0000-0000-000000000000"
+}
