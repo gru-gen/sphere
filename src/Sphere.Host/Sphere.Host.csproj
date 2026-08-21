@@ -6,7 +6,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Modules\Sphere.Basket\Sphere.Basket.csproj" />
     <ProjectReference Include="..\Modules\Sphere.Catalog\Sphere.Catalog.csproj" />
+    <ProjectReference Include="..\Modules\Sphere.Ordering\Sphere.Ordering.csproj" />
   </ItemGroup>
 
 </Project>
