@@ -34,6 +34,7 @@ public static class CatalogModule
 
         api.MapGet("/products", GetProducts.HandleAsync);
         api.MapGet("/products/{id:guid}", GetProductById.HandleAsync);
+        api.MapGet("/products/scroll", ScrollProducts.HandleAsync);
         api.MapPost("/products", CreateProduct.HandleAsync)
             .AddEndpointFilter<ValidationFilter<CreateProduct.Request>>();
 
