@@ -17,4 +17,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sphere.Catalog.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -5,5 +5,7 @@
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Sphere.Catalog/Sphere.Catalog.csproj" Id="c04013b8-d2c5-4264-8ebf-a9eaa9210a91" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="c66ccafc-9eec-479a-a7b4-a47936dbfd4a" />
+  </Folder>
 </Solution>
