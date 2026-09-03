@@ -5,4 +5,8 @@
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Sphere.Catalog\Sphere.Catalog.csproj" />
+  </ItemGroup>
+
 </Project>
