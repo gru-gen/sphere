@@ -1,0 +1,25 @@
+@host = http://localhost:5100
+@customerId = 11111111-1111-1111-1111-111111111111
+@productId = 01a066f1-65b1-722c-8ba6-6356cf6703e6
+
+### The basket of a new customer - expect 200 OK with an empty items list
+GET {{host}}/api/basket/{{customerId}}
+
+### Add an item - expect 204 No Content
+POST {{host}}/api/basket/{{customerId}}/items
+Content-Type: application/json
+{
+    "productId": "{{productId}}",
+    "quantity": 2
+}
+
+### Add an invalid item - quantity outside 1..100; expect 400 with field errors
+POST {{host}}/api/basket/{{customerId}}/items
+Content-Type: application/json
+{
+    "productId": "00000000-0000-0000-0000-000000000000",
+    "quantity": 0
+}
+
+### Remove one product from the basket - expect 204 No Content
+DELETE {{host}}/api/basket/{{customerId}}/items/{{productId}}
