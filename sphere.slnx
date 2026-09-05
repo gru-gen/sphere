@@ -9,5 +9,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="c66ccafc-9eec-479a-a7b4-a47936dbfd4a" />
+    <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="78e1f435-e95b-450c-b6ac-dcc0da635773" />
   </Folder>
 </Solution>

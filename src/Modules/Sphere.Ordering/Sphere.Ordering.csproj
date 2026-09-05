@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Sphere.Catalog\Sphere.Catalog.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sphere.Ordering.Tests" />
+  </ItemGroup>
+
 </Project>
