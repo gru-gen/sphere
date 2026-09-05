@@ -58,7 +58,7 @@ public static class OrderingModule
             });
 
         app.MapGet("/api/orders/{id:guid}", GetOrder.Handle);
-        app.MapGet("/api/orders", ListOrders.Handle);
+        app.MapGet("/api/orders/customer/{customerId:guid}", ListOrders.Handle);
 
         return app;
     }

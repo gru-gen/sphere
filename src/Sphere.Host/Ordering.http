@@ -1,0 +1,27 @@
+@host = http://localhost:5100
+@customerId = 11111111-1111-1111-1111-111111111111
+
+### Check out the basket filled in Basket.http - expect 201 Created + Location
+### The body carries only the customer id: prices come from the catalog, never from the client
+POST {{host}}/api/checkout
+Content-Type: application/json
+
+{ "customerId": "{{customerId}}" }
+
+### Check out an EMPTY basket (a fresh customer) - the domain says no; expect 422
+POST {{host}}/api/checkout
+Content-Type: application/json
+
+{ "customerId": "22222222-2222-2222-2222-222222222222" }
+
+### One order - expect 200 OK
+GET {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4
+
+### All orders - expect 200 OK
+GET {{host}}/api/orders/customer/{{customerId}}
+
+### Cancel the order - expect 204 No Content
+POST {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4/cancel
+
+### Cancel it AGAIN - only a placed order can be cancelled; expect 422
+POST {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4/cancel

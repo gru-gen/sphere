@@ -52,11 +52,11 @@ internal static class GetOrder
 
         return TypedResults.Ok(new OrderResponse(
             head.Id, head.CustomerId, OrderStatus.FromId(head.StatusId).Name,
-            head.Total, head.Currency, head.PlacedAtUtc, lines));
+            head.Total, head.Currency, new DateTimeOffset(DateTime.SpecifyKind(head.PlacedAtUtc, DateTimeKind.Utc)), lines));
         }
 
     private sealed record OrderRow(Guid Id, Guid CustomerId, int StatusId, decimal Total,
-        string Currency, DateTimeOffset PlacedAtUtc);
+        string Currency, DateTime PlacedAtUtc);
 }
 
 internal static class ListOrders
@@ -79,10 +79,11 @@ internal static class ListOrders
 
         return TypedResults.Ok(rows
             .Select(r => new OrderSummaryResponse(
-                r.Id, OrderStatus.FromId(r.StatusId).Name, r.Total, r.Currency, r.PlacedAtUtc))
+                r.Id, OrderStatus.FromId(r.StatusId).Name, r.Total, r.Currency,
+                new DateTimeOffset(DateTime.SpecifyKind(r.PlacedAtUtc, DateTimeKind.Utc))))
             .ToList());
     }
 
     private sealed record SummaryRow(
-        Guid Id, int StatusId, decimal Total, string Currency, DateTimeOffset PlacedAtUtc);
+        Guid Id, int StatusId, decimal Total, string Currency, DateTime PlacedAtUtc);
 }

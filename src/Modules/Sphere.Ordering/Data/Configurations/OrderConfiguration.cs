@@ -14,6 +14,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CustomerId).HasColumnName("customer_id");
         builder.Property(o => o.Status).HasColumnName("status_id")
             .HasConversion(s => s.Id, id => OrderStatus.FromId(id));
+        builder.Property(o => o.Currency).HasColumnName("currency").HasMaxLength(3);
         builder.Property(o => o.Total).HasColumnName("total").HasColumnType("numeric(12,2)");
         builder.Property(o => o.PlacedAtUtc).HasColumnName("placed_at_utc");
 
