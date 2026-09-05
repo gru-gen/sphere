@@ -5,6 +5,7 @@
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Sphere.Basket/Sphere.Basket.csproj" Id="4b838b82-f723-4bab-98b4-76aa6a5b796c" />
     <Project Path="src/Modules/Sphere.Catalog/Sphere.Catalog.csproj" Id="c04013b8-d2c5-4264-8ebf-a9eaa9210a91" />
+    <Project Path="src/Modules/Sphere.Ordering/Sphere.Ordering.csproj" Id="cc3b3985-4324-47e5-9c8e-7aead4d7a916" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="c66ccafc-9eec-479a-a7b4-a47936dbfd4a" />
