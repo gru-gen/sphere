@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Npgsql;
 
 namespace Sphere.Catalog.Features.Products;
 
@@ -30,7 +31,17 @@ internal static class CreateProduct
 
         var product = ToProduct(request, clock);
         dbContext.Products.Add(product);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            // why: the unique index is the REAL guard; when the race happens, it
+            // speaks SQLSTATE 23505 and the API translates that into a calm 409.
+            return TypedResults.Conflict($"Sku '{request.Sku}' is already used.");
+        }
 
         return TypedResults.Created($"/api/products/{product.Id}", product.ToResponse());
     }
