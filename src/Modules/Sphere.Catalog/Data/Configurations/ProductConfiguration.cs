@@ -18,7 +18,13 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.CreatedAtUtc).HasColumnName("created_at_utc");
 
         builder.HasIndex(p => p.Sku).IsUnique().HasDatabaseName("ux_products_categories");
-        builder.HasIndex(p => p.CategoryId).HasDatabaseName("ix_products_category_id");
+        // why: one composite serves the filtered browse, its sort, and (by leftmost
+        // prefix) any plain category_id lookup — the old single-column index retires.
+        builder.HasIndex(p => new { p.CategoryId, p.Name })
+            .HasDatabaseName("ix_products_category_id_name");
+        // why: the keyset scroll walks this exact order.
+        builder.HasIndex(p => new { p.Name, p.Id })
+            .HasDatabaseName("ix_products_name_id");
 
         builder.HasOne<Category>().WithMany()
             .HasForeignKey(p => p.CategoryId)
