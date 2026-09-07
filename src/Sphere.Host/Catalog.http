@@ -32,3 +32,9 @@ Content-Type: application/json
     "price": 0,
     "categoryId": "00000000-0000-0000-0000-000000000000"
 }
+
+### Scroll: the first page of deep browsing - expect 200 OK with items and a next cursor
+GET {{host}}/api/products/scroll?pageSize=5
+
+### Scroll: the NEXT page - nextAfterName and nextAfterId expect 200 OK
+GET {{host}}/api/products/scroll?pageSize=5&afterName=Bolt%20Boot&afterId=01a066f1-65b1-7f7b-93a9-9f4a32f64bf5
