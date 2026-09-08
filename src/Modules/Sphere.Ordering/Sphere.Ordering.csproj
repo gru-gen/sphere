@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Sphere.Ordering.Tests" />
+    <InternalsVisibleTo Include="Sphere.Integration.Tests" />
   </ItemGroup>
 
 </Project>

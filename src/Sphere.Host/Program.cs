@@ -34,3 +34,7 @@ app.MapBasketEndpoints();
 app.MapOrderingEndpoints();
 
 app.Run();
+
+// summary: gives WebApplicationFactory a public type to point at (top-level
+// statements make Program internal by default).
+public partial class Program;
