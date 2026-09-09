@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj" Id="8b8718bc-150e-4173-8b07-21b1fee4313d" />
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="ec696446-8837-4650-9a55-9d3386d6c957" />
   </Folder>
   <Folder Name="/src/Modules/">
