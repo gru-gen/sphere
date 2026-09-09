@@ -1,0 +1,13 @@
+@host = http://localhost:5120
+
+### expect 200 OK with a PriceLine per EXISTING id
+POST {{host}}/internal/prices
+Content-Type: application/json
+
+{ "productIds": ["01a066f1-65b1-722c-8ba6-6356cf6703e6", "01a066f1-65b1-7f9b-9f7c-89714724f094"] }
+
+### Ask for an unknown id - it is simply absent from the answer; the CALLER decides if that is an error
+POST {{host}}/internal/prices
+Content-Type: application/json
+
+{ "productIds": ["00000000-0000-0000-0000-000000000000"] }
