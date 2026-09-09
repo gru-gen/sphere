@@ -4,7 +4,7 @@ using Sphere.Catalog.Data;
 using Sphere.Catalog.Domain;
 using Sphere.Catalog.Features.Products;
 
-namespace Sphere.Integration.Tests;
+namespace Sphere.Integration.Tests.Catalog;
 
 [Collection("postgres")]
 public class CatalogDataTests(PostgresFixture postgresFixture)

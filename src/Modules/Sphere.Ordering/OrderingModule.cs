@@ -25,6 +25,7 @@ public static class OrderingModule
         builder.Services.AddSingleton(new OrderingReadDb(connectionString));
         builder.Services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(includeInternalTypes: true);
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "ordering-db");
+        builder.Services.AddSingleton(TimeProvider.System);
 
         builder.Services.AddMediatR(config =>
         {
