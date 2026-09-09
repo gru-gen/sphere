@@ -1,6 +1,5 @@
-namespace Sphere.Catalog.Contracts;
+namespace Sphere.Ordering.Application.Checkout;
 
-// summary: the Catalog module's public contract — current prices for a set of products.
 public interface IProductPriceReader
 {
     Task<IReadOnlyDictionary<Guid, ProductPrice>> GetAsync(

@@ -1,6 +1,5 @@
 using FluentValidation;
 using Sphere.Basket.Contracts;
-using Sphere.Catalog.Contracts;
 
 namespace Sphere.Ordering.Application.Checkout;
 

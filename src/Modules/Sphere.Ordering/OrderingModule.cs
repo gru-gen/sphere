@@ -10,6 +10,7 @@ using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Features;
+using Sphere.Ordering.Infrastructure;
 
 namespace Sphere.Ordering;
 
@@ -30,6 +31,16 @@ public static class OrderingModule
             config.RegisterServicesFromAssemblyContaining<OrderingDbContext>();
             config.AddOpenBehavior(typeof(LoggingBehavior<,>));
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+
+        var catalogBaseUrl = builder.Configuration["Catalog:BaseUrl"]
+            ?? throw new InvalidOperationException("Setting 'Catalog:BaseUrl' is missing.");
+        builder.Services.AddHttpClient<IProductPriceReader, CatalogHttpPriceReader>(client =>
+        {
+            client.BaseAddress = new Uri(catalogBaseUrl);
+            // why: fail in 2 seconds, not in 100 — a hung checkout holds a
+            // request thread AND a database connection.
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
 
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();
