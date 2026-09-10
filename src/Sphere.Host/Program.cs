@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Sphere.Basket;
 using Sphere.Ordering;
+using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.AddBasketModule();
@@ -23,8 +24,7 @@ if (app.Environment.IsDevelopment())
     await app.MigrateOrderingAsync();
 }
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-app.MapHealthChecks("/health/ready");
+app.MapDefaultEndpoints();
 
 app.MapBasketEndpoints();
 app.MapOrderingEndpoints();

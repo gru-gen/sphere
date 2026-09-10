@@ -3,6 +3,7 @@
     <Project Path="src/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj" Id="8b8718bc-150e-4173-8b07-21b1fee4313d" />
     <Project Path="src/Sphere.Gateway/Sphere.Gateway.csproj" Id="11b988a0-a304-42f5-a6d8-0c08a2b55fc7" />
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="ec696446-8837-4650-9a55-9d3386d6c957" />
+    <Project Path="src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj" Id="203eb15e-c990-4d44-8025-ee3eff20f8d5" />
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Sphere.Basket/Sphere.Basket.csproj" Id="4b838b82-f723-4bab-98b4-76aa6a5b796c" />

@@ -18,6 +18,7 @@ COPY ["src/Sphere.Host/Sphere.Host.csproj", "src/Sphere.Host/"]
 COPY ["src/Modules/Sphere.Basket/Sphere.Basket.csproj", "src/Modules/Sphere.Basket/"]
 COPY ["src/Modules/Sphere.Ordering/Sphere.Ordering.csproj", "src/Modules/Sphere.Ordering/"]
 COPY ["src/Modules/Sphere.Catalog/Sphere.Catalog.csproj", "src/Modules/Sphere.Catalog/"]
+COPY ["src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj", "src/Sphere.ServiceDefaults/"]
 RUN dotnet restore "./src/Sphere.Host/Sphere.Host.csproj"
 COPY . .
 WORKDIR "/src/src/Sphere.Host"

@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Sphere.Catalog;
+using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 builder.AddCatalogModule();
 
@@ -16,8 +17,7 @@ if (app.Environment.IsDevelopment())
     await app.SeedCatalogAsync();
 }
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-app.MapHealthChecks("/health/ready");
+app.MapDefaultEndpoints();
 
 app.MapCatalogEndpoints();
 app.MapInternalCatalogEndpoints();

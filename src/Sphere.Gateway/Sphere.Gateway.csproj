@@ -10,5 +10,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sphere.ServiceDefaults\Sphere.ServiceDefaults.csproj" />
+  </ItemGroup>
   
 </Project>
