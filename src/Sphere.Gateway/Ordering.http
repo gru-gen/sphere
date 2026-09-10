@@ -15,13 +15,13 @@ Content-Type: application/json
 { "customerId": "22222222-2222-2222-2222-222222222222" }
 
 ### One order - expect 200 OK
-GET {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4
+GET {{host}}/api/orders/01a08b13-9871-77cd-91a5-fc0c8f36fa93
 
 ### All orders - expect 200 OK
 GET {{host}}/api/orders/customer/{{customerId}}
 
 ### Cancel the order - expect 204 No Content
-POST {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4/cancel
+POST {{host}}/api/orders/01a08b13-9871-77cd-91a5-fc0c8f36fa93/cancel
 
 ### Cancel it AGAIN - only a placed order can be cancelled; expect 422
-POST {{host}}/api/orders/01a07184-9bab-7477-8de8-4d646aba4fd4/cancel
+POST {{host}}/api/orders/01a08b13-9871-77cd-91a5-fc0c8f36fa93/cancel

@@ -4,7 +4,7 @@
 GET {{host}}/api/products?pageSize=5
 
 ### One product by id - expect 200 OK
-GET {{host}}/api/products/01a066f1-65b1-722c-8ba6-6356cf6703e6
+GET {{host}}/api/products/01a08b0d-eecd-747e-9834-e7aec8f242e2
 
 ### Unknown id - expect 404 Not Found
 GET {{host}}/api/products/00000000-0000-0000-0000-000000000000
@@ -19,7 +19,7 @@ Content-Type: application/json
     "sku": "SHP-901",
     "name": "Comet Runner",
     "price": 79.90,
-    "categoryId": "01a066f1-65b0-7a68-9561-8a04bc34a61d"
+    "categoryId": "01a08b0d-eecb-79c9-97ab-f79f56b32c06"
 }
 
 ### Create an invalid product - expect 400 with an errors dictionary
@@ -37,4 +37,4 @@ Content-Type: application/json
 GET {{host}}/api/products/scroll?pageSize=5
 
 ### Scroll: the NEXT page - nextAfterName and nextAfterId expect 200 OK
-GET {{host}}/api/products/scroll?pageSize=5&afterName=Bolt%20Boot&afterId=01a066f1-65b1-7f7b-93a9-9f4a32f64bf5
+GET {{host}}/api/products/scroll?pageSize=5&afterName=Bolt%20Boot&afterId=01a08b0d-eecd-7ca6-be26-4a3be767995d
