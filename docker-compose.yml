@@ -1,0 +1,25 @@
+services:
+  sphere.gateway:
+    image: ${DOCKER_REGISTRY-}spheregateway
+    build:
+      context: .
+      dockerfile: src/Sphere.Gateway/Dockerfile
+
+  sphere.host:
+    image: ${DOCKER_REGISTRY-}spherehost
+    build:
+      context: .
+      dockerfile: src/Sphere.Host/Dockerfile
+
+  sphere.catalog.service:
+    image: ${DOCKER_REGISTRY-}spherecatalogservice
+    build:
+      context: .
+      dockerfile: src/Sphere.Catalog.Service/Dockerfile
+
+  postgres:
+    image: postgres:17.5-alpine
+
+volumes:
+  db-data:
+

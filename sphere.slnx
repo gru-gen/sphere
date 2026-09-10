@@ -14,4 +14,7 @@
     <Project Path="tests/Sphere.Integration.Tests/Sphere.Integration.Tests.csproj" Id="2879e6f3-01a9-40da-90b0-dcdc1d71299b" />
     <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="78e1f435-e95b-450c-b6ac-dcc0da635773" />
   </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>
