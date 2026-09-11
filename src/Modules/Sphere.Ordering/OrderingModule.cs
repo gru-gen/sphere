@@ -66,9 +66,11 @@ public static class OrderingModule
     public static IEndpointRouteBuilder MapOrderingEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/checkout",
-            async Task<Created<CheckoutResult>> (CheckoutCommand command, ISender sender, CancellationToken cancellationToken) =>
+            async Task<Created<CheckoutResult>> (CheckoutCommand command, HttpContext httpContext,
+                ISender sender, CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(command, cancellationToken);
+                var key = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+                var result = await sender.Send(command with { IdempotencyKey = key }, cancellationToken);
                 return TypedResults.Created($"/api/orders/{result.OrderId}", result);
             });
 
