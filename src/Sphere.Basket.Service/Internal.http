@@ -1,0 +1,7 @@
+@host = http://localhost:5130
+
+### Expect 200 OK - a fresh customer simply gets an empty lines list; the CALLER decides what empty means
+GET {{host}}/internal/baskets/11111111-1111-1111-1111-111111111111
+
+### The internal clear door - checkout's second step; expect 204 No Content (safe to repeat)
+DELETE {{host}}/internal/baskets/11111111-1111-1111-1111-111111111111
