@@ -10,6 +10,16 @@ function Start-SphereDb {
         postgres:17.5-alpine
 }
 
+function Add-CatalogDb {
+    docker exec sphere-db psql -U sphere -d sphere `
+        -c "CREATE DATABASE catalog_db OWNER sphere"
+}
+
+function Add-BasketDb {
+    docker exec sphere-db psql -U sphere -d sphere `
+        -c "CREATE DATABASE basket_db OWNER sphere"
+}
+
 function Stop-SphereDb {
     docker rm -f sphere-db
 }

@@ -59,6 +59,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./tools/compose/init-catalog-db.sql:/docker-entrypoint-initdb.d/10-catalog-db.sql
+      - ./tools/compose/init-basket-db.sql:/docker-entrypoint-initdb.d/20-basket-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sphere -d sphere"]
       interval: 2s
