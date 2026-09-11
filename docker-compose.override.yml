@@ -37,6 +37,17 @@ services:
       postgres:
         condition: service_healthy
 
+  sphere.basket.service:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__basket=Host=postgres;Port=5432;Database=basket_db;Username=sphere;Password=sphere-dev
+    ports:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     environment:
       POSTGRES_USER: sphere
