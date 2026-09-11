@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Modules\Sphere.Basket\Sphere.Basket.csproj" />
     <ProjectReference Include="..\Modules\Sphere.Ordering\Sphere.Ordering.csproj" />
     <ProjectReference Include="..\Sphere.ServiceDefaults\Sphere.ServiceDefaults.csproj" />
   </ItemGroup>

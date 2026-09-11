@@ -44,6 +44,16 @@ public static class OrderingModule
             client.Timeout = TimeSpan.FromSeconds(2);
         });
 
+        var basketBaseUrl = builder.Configuration["Basket:BaseUrl"]
+            ?? throw new InvalidOperationException("Setting 'Basket:BaseUrl' is missing.");
+        builder.Services.AddHttpClient<ICustomerBasket, HttpCustomerBasket>(client =>
+        {
+            client.BaseAddress = new Uri(basketBaseUrl);
+            // why: fail in 2 seconds, not in 100 — a hung checkout holds a
+            // request thread AND a database connection.
+            client.Timeout = TimeSpan.FromSeconds(2);
+        });
+
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();
         builder.Services.AddExceptionHandler<DomainProblemHandler>();
 

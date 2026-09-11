@@ -1,5 +1,4 @@
 using FluentValidation;
-using Sphere.Basket.Contracts;
 
 namespace Sphere.Ordering.Application.Checkout;
 
@@ -16,7 +15,7 @@ internal sealed class CheckoutCommandValidator : AbstractValidator<CheckoutComma
 
 // summary: the checkout use case — basket in, order out, basket cleared.
 internal sealed class CheckoutCommandHandler(
-    IBasketStore basketStore,
+    ICustomerBasket customerBasket,
     IProductPriceReader productPriceReader,
     OrderingDbContext dbContext,
     TimeProvider clock) : IRequestHandler<CheckoutCommand, CheckoutResult>
@@ -25,16 +24,16 @@ internal sealed class CheckoutCommandHandler(
 
     public async Task<CheckoutResult> Handle(CheckoutCommand command, CancellationToken cancellationToken)
     {
-        var basket = await basketStore.GetAsync(command.CustomerId, cancellationToken);
-        if (basket.Items.Count == 0)
+        var basket = await customerBasket.GetAsync(command.CustomerId, cancellationToken);
+        if (basket.Lines.Count == 0)
         {
             throw new DomainException("The basket is empty.");
         }
 
         var priceMap = await productPriceReader.GetAsync(
-            [.. basket.Items.Select(i => i.ProductId)], cancellationToken);
+            [.. basket.Lines.Select(i => i.ProductId)], cancellationToken);
 
-        var lines = basket.Items.Select(item =>
+        var lines = basket.Lines.Select(item =>
         {
             if (!priceMap.TryGetValue(item.ProductId, out var price))
             {
@@ -49,7 +48,7 @@ internal sealed class CheckoutCommandHandler(
         await dbContext.SaveEntitiesAsync(cancellationToken);
 
         // tradeoff: a second, separate commit.
-        await basketStore.ClearAsync(command.CustomerId, cancellationToken);
+        await customerBasket.ClearAsync(command.CustomerId, cancellationToken);
 
         return new CheckoutResult(order.Id, order.Total, order.Currency);
     }

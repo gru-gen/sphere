@@ -18,12 +18,15 @@ services:
       - ConnectionStrings__basket=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
       - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
+      - Basket__BaseUrl=http://sphere.basket.service:8080
     ports:
       - "8080"
     depends_on:
       postgres:
         condition: service_healthy
       sphere.catalog.service:
+        condition: service_started
+      sphere.basket.service:
         condition: service_started
 
   sphere.catalog.service:

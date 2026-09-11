@@ -38,6 +38,14 @@ public static class BasketModule
         return app;
     }
 
+    public static IEndpointRouteBuilder MapInternalBasketEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapGet("/internal/baskets/{customerId:guid}", InternalBasket.GetBasketHandle);
+        app.MapDelete("/internal/baskets/{customerId:guid}", InternalBasket.ClearHandle);
+
+        return app;
+    }
+
     public static async Task MigrateBasketAsync(this WebApplication app)
     {
         await using var scope = app.Services.CreateAsyncScope();
