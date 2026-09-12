@@ -2,7 +2,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Sphere.Basket.Contracts;
 using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
 using Sphere.Ordering.Application.Checkout;
@@ -12,7 +11,7 @@ using Sphere.Ordering.Domain.Abstract;
 namespace Sphere.Integration.Tests;
 
 // summary: the money test — the REAL MediatR pipeline and the REAL database;
-// only the sibling modules are stubbed at their public contracts.
+// the sibling SERVICES are stubbed at Ordering's own ports.
 [Collection("postgres")]
 public class CheckoutPipelineTests(PostgresFixture postgresFixture)
 {
@@ -20,8 +19,8 @@ public class CheckoutPipelineTests(PostgresFixture postgresFixture)
     public async Task Checkout_commits_order_lines_and_history_atomically_then_clears()
     {
         var basket = new StubBasket(
-            new BasketSnapshotItem(Guid.CreateVersion7(), 2),
-            new BasketSnapshotItem(Guid.CreateVersion7(), 1));
+            new CustomerBasketLine(Guid.CreateVersion7(), 2),
+            new CustomerBasketLine(Guid.CreateVersion7(), 1));
 
         await using var provider = BuildPipeline(basket);
         var customerId = Guid.CreateVersion7();
@@ -46,7 +45,7 @@ public class CheckoutPipelineTests(PostgresFixture postgresFixture)
     [Fact]
     public async Task Cancelling_twice_is_refused_by_the_domain()
     {
-        var basket = new StubBasket(new BasketSnapshotItem(Guid.CreateVersion7(), 1));
+        var basket = new StubBasket(new CustomerBasketLine(Guid.CreateVersion7(), 1));
         await using var provider = BuildPipeline(basket);
 
         await using var scope = provider.CreateAsyncScope();
@@ -59,6 +58,28 @@ public class CheckoutPipelineTests(PostgresFixture postgresFixture)
 
         await using var db = postgresFixture.CreateOrderingContext();
         Assert.Equal(2, await db.History.CountAsync(h => h.OrderId == placed.OrderId));
+    }
+
+    [Fact]
+    public async Task Two_racers_one_key_one_order()
+    {
+        var basket = new StubBasket(new CustomerBasketLine(Guid.CreateVersion7(), 1));
+        await using var provider = BuildPipeline(basket);
+        var customerId = Guid.CreateVersion7();
+
+        var command = new CheckoutCommand(customerId, $"race-{customerId}");
+
+        async Task<CheckoutResult> RunAsync()
+        {
+            await using var scope = provider.CreateAsyncScope();
+            return await scope.ServiceProvider.GetRequiredService<ISender>().Send(command);
+        }
+
+        var results = await Task.WhenAll(RunAsync(), RunAsync());
+
+        Assert.Equal(results[0].OrderId, results[1].OrderId);
+        await using var db = postgresFixture.CreateOrderingContext();
+        Assert.Equal(1, await db.Orders.CountAsync(o => o.CustomerId == customerId));
     }
 
     private ServiceProvider BuildPipeline(StubBasket basket)
@@ -74,17 +95,17 @@ public class CheckoutPipelineTests(PostgresFixture postgresFixture)
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
-        services.AddSingleton<IBasketStore>(basket);
+        services.AddSingleton<ICustomerBasket>(basket);
         services.AddSingleton<IProductPriceReader>(new StubPrices());
         return services.BuildServiceProvider();
     }
 
-    private sealed class StubBasket(params BasketSnapshotItem[] items) : IBasketStore
+    private sealed class StubBasket(params CustomerBasketLine[] lines) : ICustomerBasket
     {
         public bool Cleared { get; private set; }
 
-        public Task<BasketSnapshot> GetAsync(Guid customerId, CancellationToken cancellationToken)
-            => Task.FromResult(new BasketSnapshot(customerId, items));
+        public Task<CustomerBasket> GetAsync(Guid customerId, CancellationToken cancellationToken)
+            => Task.FromResult(new CustomerBasket(customerId, lines));
 
         public Task ClearAsync(Guid customerId, CancellationToken cancellationToken)
         {
