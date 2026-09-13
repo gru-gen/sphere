@@ -15,6 +15,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     await app.MigrateBasketAsync();
+    await app.EnsureBasketTopicAsync();
 }
 
 app.MapDefaultEndpoints();

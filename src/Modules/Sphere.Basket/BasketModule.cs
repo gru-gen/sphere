@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Sphere.Basket.Contracts;
 using Sphere.Basket.Features;
+using Sphere.Basket.Infrastructure;
 using Sphere.Basket.Validation;
 
 namespace Sphere.Basket;
@@ -23,6 +25,14 @@ public static class BasketModule
         builder.Services.AddScoped<IBasketStore, BasketStore>();
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "basket-db");
         builder.Services.AddSingleton(TimeProvider.System);
+
+        var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+            ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
+
+        builder.Services.AddSingleton<IBasketEvents>(sp => new KafkaBasketEvents(
+            bootstrapServers,
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<KafkaBasketEvents>>()));
 
         return builder;
     }
@@ -45,6 +55,11 @@ public static class BasketModule
         app.MapDelete("/internal/baskets/{customerId:guid}", InternalBasket.ClearHandle);
 
         return app;
+    }
+
+    public static async Task EnsureBasketTopicAsync(this WebApplication app)
+    {
+        await app.Services.GetRequiredService<IBasketEvents>().EnsureTopicAsync();
     }
 
     public static async Task MigrateBasketAsync(this WebApplication app)

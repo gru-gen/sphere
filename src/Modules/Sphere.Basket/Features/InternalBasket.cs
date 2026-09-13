@@ -11,9 +11,17 @@ internal static class InternalBasket
         => TypedResults.Ok(await basketStore.GetAsync(customerId, cancellationToken));
 
     internal static async Task<NoContent> ClearHandle(
-        Guid customerId, IBasketStore basketStore, CancellationToken cancellationToken)
+        Guid customerId, IBasketStore basketStore, IBasketEvents events, CancellationToken cancellationToken)
     {
+        var basket = await basketStore.GetAsync(customerId, cancellationToken);
+
         await basketStore.ClearAsync(customerId, cancellationToken);
+
+        if (basket.Items.Count > 0)
+        {
+            await events.PublishCheckedOutAsync(basket, cancellationToken);
+        }
+
         return TypedResults.NoContent();
     }
 }
