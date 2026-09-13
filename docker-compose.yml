@@ -26,6 +26,9 @@ services:
   postgres:
     image: postgres:17.5-alpine
 
+  kafka:
+    image: apache/kafka:4.1.0
+
 volumes:
   db-data:
 
