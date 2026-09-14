@@ -5,11 +5,11 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Infrastructure;
 
-namespace Sphere.Integration.Tests;
+namespace Sphere.Integration.Tests.Ordering;
 
-internal sealed class MonolithFactory(
+internal sealed class OrderingFactory(
     PostgresFixture postgresFixture, HttpClient catalogClient, HttpClient basketClient)
-    : WebApplicationFactory<HostMarker>
+    : WebApplicationFactory<OrderingServiceMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

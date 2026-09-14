@@ -17,19 +17,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ConnectionStrings__basket=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
-      - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
-      - Catalog__BaseUrl=http://sphere.catalog.service:8080
-      - Basket__BaseUrl=http://sphere.basket.service:8080
     ports:
       - "8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      sphere.catalog.service:
-        condition: service_started
-      sphere.basket.service:
-        condition: service_started
 
   sphere.catalog.service:
     environment:
@@ -55,6 +44,23 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+
+  sphere.ordering.service:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
+      - Catalog__BaseUrl=http://sphere.catalog.service:8080
+      - Basket__BaseUrl=http://sphere.basket.service:8080
+    ports:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sphere.catalog.service:
+        condition: service_started
+      sphere.basket.service:
+        condition: service_started
 
   postgres:
     environment:

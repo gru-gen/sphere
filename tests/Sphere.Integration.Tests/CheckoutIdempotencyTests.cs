@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sphere.Integration.Tests.Basket;
 using Sphere.Integration.Tests.Catalog;
+using Sphere.Integration.Tests.Ordering;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,21 +14,21 @@ public sealed class CheckoutIdempotencyTests : IDisposable
     private readonly PostgresFixture _postgresFixture;
     private readonly CatalogServiceFactory _catalog;
     private readonly BasketServiceFactory _basket;
-    private readonly MonolithFactory _monolith;
+    private readonly OrderingFactory _ordering;
 
     public CheckoutIdempotencyTests(PostgresFixture postgresFixture)
     {
         _postgresFixture = postgresFixture;
         _catalog = new CatalogServiceFactory(postgresFixture);
         _basket = new BasketServiceFactory(postgresFixture);
-        _monolith = new MonolithFactory(postgresFixture, _catalog.CreateClient(), _basket.CreateClient());
+        _ordering = new OrderingFactory(postgresFixture, _catalog.CreateClient(), _basket.CreateClient());
     }
 
     public void Dispose()
     {
-        _monolith.Dispose();
+        _ordering.Dispose();
         _catalog.Dispose();
-        _catalog.Dispose();
+        _basket.Dispose();
     }
 
     private static Task<HttpResponseMessage> PostCheckoutAsync(
@@ -48,7 +49,7 @@ public sealed class CheckoutIdempotencyTests : IDisposable
             "/api/products?pageSize=1");
         var productId = browse.GetProperty("items")[0].GetProperty("id").GetGuid();
 
-        var monolithClient = _monolith.CreateClient();
+        var orderingClient = _ordering.CreateClient();
         var customerId = Guid.CreateVersion7();
         var add = await _basket.CreateClient().PostAsJsonAsync(
              $"/api/basket/{customerId}/items", new { productId, quantity = 1 });
@@ -56,13 +57,13 @@ public sealed class CheckoutIdempotencyTests : IDisposable
 
         var key = $"order-{Guid.CreateVersion7()}";
 
-        var firstResponse = await PostCheckoutAsync(monolithClient, customerId, key);
+        var firstResponse = await PostCheckoutAsync(orderingClient, customerId, key);
         Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
         var first = await firstResponse.Content.ReadFromJsonAsync<JsonElement>();
 
         // why: the basket is EMPTY now — the first call cleared it. The replay
         // still answers 201 with the SAME order, because it does no work.
-        var secondResponse = await PostCheckoutAsync(monolithClient, customerId, key);
+        var secondResponse = await PostCheckoutAsync(orderingClient, customerId, key);
         Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
         var second = await secondResponse.Content.ReadFromJsonAsync<JsonElement>();
 

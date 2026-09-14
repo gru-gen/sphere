@@ -1,26 +1,27 @@
 using Sphere.Integration.Tests.Basket;
 using Sphere.Integration.Tests.Catalog;
+using Sphere.Integration.Tests.Ordering;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Sphere.Integration.Tests;
 
-// summary: the journey after the SECOND cut — the same loop, now across three
-// processes. Browse talks to Catalog, the basket steps talk to Basket, and
-// checkout in the monolith crosses the wire twice: prices in, clear out.
+// summary: the journey after the THIRD cut — the same loop, every module in
+// its own process. Browse talks to Catalog, the basket steps talk to Basket,
+// and checkout in Ordering crosses the wire twice: prices in, clear out.
 [Collection("postgres")]
 public sealed class ShoppingLoopTests : IDisposable
 {
     private readonly CatalogServiceFactory _catalogServiceFactory;
     private readonly BasketServiceFactory _basketServiceFactory;
-    private readonly MonolithFactory _monolithFactory;
+    private readonly OrderingFactory _orderingServiceFactory;
 
     public ShoppingLoopTests(PostgresFixture postgresFixture)
     {
         _catalogServiceFactory = new CatalogServiceFactory(postgresFixture);
         _basketServiceFactory = new BasketServiceFactory(postgresFixture);
-        _monolithFactory = new MonolithFactory(postgresFixture, _catalogServiceFactory.CreateClient(), _basketServiceFactory.CreateClient());
+        _orderingServiceFactory = new OrderingFactory(postgresFixture, _catalogServiceFactory.CreateClient(), _basketServiceFactory.CreateClient());
     }
 
     [Fact]
@@ -28,7 +29,7 @@ public sealed class ShoppingLoopTests : IDisposable
     {
         var catalogClient = _catalogServiceFactory.CreateClient();
         var basketClient = _basketServiceFactory.CreateClient();
-        var monolithCLient = _monolithFactory.CreateClient();
+        var orderingClient = _orderingServiceFactory.CreateClient();
         var customerId = Guid.CreateVersion7();
 
         // browse: the CATALOG SERVICE answers
@@ -40,14 +41,14 @@ public sealed class ShoppingLoopTests : IDisposable
             new { productId, quantity = 2 });
         Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
 
-        // checkout: the monolith calls Catalog for prices, then Basket to clear
-        var checkout = await monolithCLient.PostAsJsonAsync("/api/checkout", new { customerId });
+        // checkout: the ordering calls Catalog for prices, then Basket to clear
+        var checkout = await orderingClient.PostAsJsonAsync("/api/checkout", new { customerId });
         Assert.Equal(HttpStatusCode.Created, checkout.StatusCode);
         var placed = await checkout.Content.ReadFromJsonAsync<JsonElement>();
         var orderId = placed.GetProperty("orderId").GetGuid();
 
         // read: the order exists, Placed, one line — and the REMOTE basket is empty
-        var order = await monolithCLient.GetFromJsonAsync<JsonElement>($"/api/orders/{orderId}");
+        var order = await orderingClient.GetFromJsonAsync<JsonElement>($"/api/orders/{orderId}");
         Assert.Equal("Placed", order.GetProperty("status").GetString());
         Assert.Equal(1, order.GetProperty("lines").GetArrayLength());
 
@@ -55,10 +56,10 @@ public sealed class ShoppingLoopTests : IDisposable
         Assert.Equal(0, basket.GetProperty("items").GetArrayLength());
 
         // cancel: 204, then the domain says no with a 422 problem document
-        var cancel = await monolithCLient.PostAsync($"/api/orders/{orderId}/cancel", null);
+        var cancel = await orderingClient.PostAsync($"/api/orders/{orderId}/cancel", null);
         Assert.Equal(HttpStatusCode.NoContent, cancel.StatusCode);
 
-        var again = await monolithCLient.PostAsync($"/api/orders/{orderId}/cancel", null);
+        var again = await orderingClient.PostAsync($"/api/orders/{orderId}/cancel", null);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, again.StatusCode);
         var problem = await again.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Contains("cannot be cancelled", problem.GetProperty("detail").GetString());
@@ -66,7 +67,7 @@ public sealed class ShoppingLoopTests : IDisposable
 
     public void Dispose()
     {
-        _monolithFactory.Dispose();
+        _orderingServiceFactory.Dispose();
         _catalogServiceFactory.Dispose();
         _basketServiceFactory.Dispose();
     }
