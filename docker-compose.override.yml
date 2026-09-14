@@ -49,7 +49,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
+      - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=ordering_db;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
       - Basket__BaseUrl=http://sphere.basket.service:8080
     ports:
@@ -71,6 +71,7 @@ services:
       - db-data:/var/lib/postgresql/data
       - ./tools/compose/init-catalog-db.sql:/docker-entrypoint-initdb.d/10-catalog-db.sql
       - ./tools/compose/init-basket-db.sql:/docker-entrypoint-initdb.d/20-basket-db.sql
+      - ./tools/compose/init-ordering-db.sql:/docker-entrypoint-initdb.d/30-ordering-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sphere -d sphere"]
       interval: 2s

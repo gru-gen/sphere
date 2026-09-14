@@ -20,6 +20,11 @@ function Add-BasketDb {
         -c "CREATE DATABASE basket_db OWNER sphere"
 }
 
+function Add-OrderingDb {
+    docker exec sphere-db psql -U sphere -d sphere `
+        -c "CREATE DATABASE ordering_db OWNER sphere"
+}
+
 function Stop-SphereDb {
     docker rm -f sphere-db
 }

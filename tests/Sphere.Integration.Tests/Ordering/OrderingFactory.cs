@@ -14,7 +14,7 @@ internal sealed class OrderingFactory(
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-        builder.UseSetting("ConnectionStrings:ordering", postgresFixture.ConnectionString);
+        builder.UseSetting("ConnectionStrings:ordering", postgresFixture.OrderingConnectionString);
 
         builder.UseSetting("Catalog:BaseUrl", "http://catalog.test");
         builder.UseSetting("Basket:BaseUrl", "http://basket.test");

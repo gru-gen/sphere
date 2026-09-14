@@ -27,6 +27,9 @@ public sealed class PostgresFixture : IAsyncLifetime
     public string BasketConnectionString =>
         ConnectionString.Replace("Database=sphere", "Database=basket_db");
 
+    public string OrderingConnectionString =>
+        CatalogConnectionString.Replace("Database=sphere", "Database=ordering_db");
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
@@ -34,7 +37,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         await using (var admin = new NpgsqlConnection(ConnectionString))
         {
             await admin.OpenAsync();
-            foreach (var name in new[] { "catalog_db", "basket_db" })
+            foreach (var name in new[] { "catalog_db", "basket_db", "ordering_db" })
             {
                 await using var create = new NpgsqlCommand($"CREATE DATABASE {name}", admin);
                 await create.ExecuteNonQueryAsync();
@@ -62,10 +65,8 @@ public sealed class PostgresFixture : IAsyncLifetime
             .UseNpgsql(BasketConnectionString).Options);
 
     internal OrderingDbContext CreateOrderingContext(IPublisher? publisher = null) =>
-        new(Options<OrderingDbContext>(), publisher ?? new NoopPublisher());
-
-    private DbContextOptions<T> Options<T>() where T : DbContext =>
-        new DbContextOptionsBuilder<T>().UseNpgsql(ConnectionString).Options;
+        new(new DbContextOptionsBuilder<OrderingDbContext>()
+            .UseNpgsql(OrderingConnectionString).Options, publisher ?? new NoopPublisher());
 
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 

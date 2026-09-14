@@ -87,7 +87,7 @@ public class CheckoutPipelineTests(PostgresFixture postgresFixture)
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(TimeProvider.System);
-        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(postgresFixture.ConnectionString));
+        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(postgresFixture.OrderingConnectionString));
         services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(includeInternalTypes: true);
         services.AddMediatR(cfg =>
         {
