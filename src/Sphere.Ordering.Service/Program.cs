@@ -15,6 +15,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     await app.MigrateOrderingAsync();
+    await app.EnsureOrderingTopicsAsync();
 }
 
 app.MapDefaultEndpoints();

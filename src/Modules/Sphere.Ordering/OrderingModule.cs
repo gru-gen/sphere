@@ -1,3 +1,5 @@
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
 using Sphere.Ordering.Application.Pricing;
@@ -71,6 +74,47 @@ public static class OrderingModule
         app.MapGet("/api/orders/customer/{customerId:guid}", ListOrders.Handle);
 
         return app;
+    }
+
+    public static async Task EnsureOrderingTopicsAsync(this WebApplication app)
+    {
+        var settings = app.Services.GetRequiredService<KafkaSettings>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("OrderingTopics");
+        using var admin = new AdminClientBuilder(
+            new AdminClientConfig
+            {
+                BootstrapServers = settings.BootstrapServers
+            }).Build();
+
+        try
+        {
+            await admin.CreateTopicsAsync(
+                [
+                    new TopicSpecification
+                    {
+                        Name = BasketCheckedOutConsumer.RetryTopic,
+                        NumPartitions = 1,
+                        ReplicationFactor = 1,
+                    },
+                    new TopicSpecification
+                    {
+                        Name = BasketCheckedOutConsumer.DeadLetterTopic,
+                        NumPartitions = 1,
+                        ReplicationFactor = 1,
+                    }
+                ],
+                new CreateTopicsOptions { RequestTimeout = TimeSpan.FromSeconds(3) });
+        }
+        catch (CreateTopicsException e) when(
+            e.Results.All(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
+        {
+            // the second start of the same stack — nothing to do.
+        }
+        catch (KafkaException e)
+        {
+            logger.LogWarning(e, "Ordering topics were not ensured.");
+        }
     }
 
     public static async Task MigrateOrderingAsync(this WebApplication app)
