@@ -1,4 +1,4 @@
-namespace Sphere.Ordering.Application.Checkout;
+namespace Sphere.Ordering.Application.Pricing;
 
 public interface IProductPriceReader
 {

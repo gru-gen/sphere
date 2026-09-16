@@ -4,6 +4,7 @@ internal sealed class BasketDbContext(DbContextOptions<BasketDbContext> options)
     : DbContext(options)
 {
     public DbSet<BasketItem> Items => Set<BasketItem>();
+    public DbSet<CheckoutRecord> Checkouts => Set<CheckoutRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,6 +21,17 @@ internal sealed class BasketDbContext(DbContextOptions<BasketDbContext> options)
             b.Property(i => i.ProductId).HasColumnName("product_id");
             b.Property(i => i.Quantity).HasColumnName("quantity");
             b.Property(i => i.UpdatedAtUtc).HasColumnName("updated_at_utc");
+        });
+
+        modelBuilder.Entity<CheckoutRecord>(b =>
+        {
+            b.ToTable("checkouts");
+
+            b.HasKey(c => c.Key).HasName("pk_checkouts");
+
+            b.Property(c => c.Key).HasColumnName("key").HasMaxLength(200);
+            b.Property(c => c.OrderId).HasColumnName("order_id");
+            b.Property(c => c.CreatedAtUtc).HasColumnName("created_at_utc");
         });
     }
 }

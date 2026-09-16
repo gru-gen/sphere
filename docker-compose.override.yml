@@ -4,6 +4,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ReverseProxy__Clusters__catalog__Destinations__d1__Address=http://sphere.catalog.service:8080/
+      - ReverseProxy__Clusters__ordering__Destinations__d1__Address=http://sphere.ordering.service:8080/
       - ReverseProxy__Clusters__basket__Destinations__d1__Address=http://sphere.basket.service:8080/
       - ReverseProxy__Clusters__monolith__Destinations__d1__Address=http://sphere.host:8080/
     ports:
@@ -51,7 +52,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=ordering_db;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
-      - Basket__BaseUrl=http://sphere.basket.service:8080
+      - Kafka__BootstrapServers=kafka:9092
     ports:
       - "8080"
     depends_on:
@@ -59,8 +60,8 @@ services:
         condition: service_healthy
       sphere.catalog.service:
         condition: service_started
-      sphere.basket.service:
-        condition: service_started
+      kafka:
+        condition: service_healthy
 
   postgres:
     environment:

@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Sphere.Ordering.Application.Checkout;
+using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Infrastructure;
 
 namespace Sphere.Integration.Tests.Ordering;
 
-internal sealed class OrderingFactory(
-    PostgresFixture postgresFixture, HttpClient catalogClient, HttpClient basketClient)
+internal sealed class OrderingServiceFactory(
+    PostgresFixture postgresFixture, HttpClient catalogClient, HttpClient basketClient, string? kafkaBootstrap = null)
     : WebApplicationFactory<OrderingServiceMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -17,7 +17,7 @@ internal sealed class OrderingFactory(
         builder.UseSetting("ConnectionStrings:ordering", postgresFixture.OrderingConnectionString);
 
         builder.UseSetting("Catalog:BaseUrl", "http://catalog.test");
-        builder.UseSetting("Basket:BaseUrl", "http://basket.test");
+        builder.UseSetting("Kafka:BootstrapServers", kafkaBootstrap ?? "unused:9092");
 
         builder.ConfigureServices(services =>
         {
@@ -25,9 +25,12 @@ internal sealed class OrderingFactory(
             services.AddSingleton<IProductPriceReader>(
                 new CatalogHttpPriceReader(catalogClient));
 
-            services.RemoveAll<ICustomerBasket>();
-            services.AddSingleton<ICustomerBasket>(
-                new HttpCustomerBasket(basketClient));
+            if (kafkaBootstrap is null)
+            {
+                var consumer = services.Single(d =>
+                    d.ImplementationType == typeof(BasketCheckedOutConsumer));
+                services.Remove(consumer);
+            }
         });
     }
 }

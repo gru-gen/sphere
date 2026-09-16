@@ -10,6 +10,7 @@ public class OrderTests
 
     private static Order PlaceOne() => Order.Place(
         Guid.CreateVersion7(),
+        Guid.CreateVersion7(),
         [(Guid.CreateVersion7(), "Aurora Sneaker", Money.Of(89.90m, "EUR"), 2)],
         Clock);
 
@@ -27,13 +28,14 @@ public class OrderTests
     [Fact]
     public void Place_refuses_an_empty_order()
     {
-        Assert.Throws<DomainException>(() => Order.Place(Guid.NewGuid(), [], Clock));
+        Assert.Throws<DomainException>(() => Order.Place(Guid.CreateVersion7(), Guid.NewGuid(), [], Clock));
     }
 
     [Fact]
     public void Place_refuses_a_bad_quantity()
     {
         Assert.Throws<DomainException>(() => Order.Place(
+            Guid.CreateVersion7(),
             Guid.NewGuid(),
             [(Guid.NewGuid(), "Aurora", Money.Of(10m, "EUR"), 0)],
             Clock));

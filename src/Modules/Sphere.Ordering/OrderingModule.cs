@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
-using Sphere.Ordering.Application.Checkout;
+using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Features;
 using Sphere.Ordering.Infrastructure;
 
@@ -44,15 +44,10 @@ public static class OrderingModule
             client.Timeout = TimeSpan.FromSeconds(2);
         });
 
-        var basketBaseUrl = builder.Configuration["Basket:BaseUrl"]
-            ?? throw new InvalidOperationException("Setting 'Basket:BaseUrl' is missing.");
-        builder.Services.AddHttpClient<ICustomerBasket, HttpCustomerBasket>(client =>
-        {
-            client.BaseAddress = new Uri(basketBaseUrl);
-            // why: fail in 2 seconds, not in 100 — a hung checkout holds a
-            // request thread AND a database connection.
-            client.Timeout = TimeSpan.FromSeconds(2);
-        });
+        var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+            ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
+        builder.Services.AddSingleton(new KafkaSettings(bootstrapServers));
+        builder.Services.AddHostedService<BasketCheckedOutConsumer>();
 
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();
         builder.Services.AddExceptionHandler<DomainProblemHandler>();
@@ -65,15 +60,6 @@ public static class OrderingModule
 
     public static IEndpointRouteBuilder MapOrderingEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/checkout",
-            async Task<Created<CheckoutResult>> (CheckoutCommand command, HttpContext httpContext,
-                ISender sender, CancellationToken cancellationToken) =>
-            {
-                var key = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
-                var result = await sender.Send(command with { IdempotencyKey = key }, cancellationToken);
-                return TypedResults.Created($"/api/orders/{result.OrderId}", result);
-            });
-
         app.MapPost("/api/orders/{id:guid}/cancel",
             async Task<NoContent> (Guid id, ISender sender, CancellationToken cancellationToken) =>
             {

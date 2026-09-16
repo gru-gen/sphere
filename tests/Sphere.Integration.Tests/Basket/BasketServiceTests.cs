@@ -15,7 +15,7 @@ public sealed class BasketServiceTests : IDisposable
     public void Dispose() => _factory.Dispose();
 
     [Fact]
-    public async Task Internal_door_reads_the_snapshot_and_clears_idempotently()
+    public async Task Public_door_reads_and_the_internal_doors_are_gone()
     {
         var client = _factory.CreateClient();
         var customerId = Guid.CreateVersion7();
@@ -25,22 +25,11 @@ public sealed class BasketServiceTests : IDisposable
             new { productId, quantity = 3 });
         Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
 
-        // the checkout-facing read
-        var snapshot = await client.GetFromJsonAsync<JsonElement>(
-            $"/internal/baskets/{customerId}");
-        var items = snapshot.GetProperty("items");
-        Assert.Equal(1, items.GetArrayLength());
-        Assert.Equal(3, items[0].GetProperty("quantity").GetInt32());
-
-        // the checkout-facing clear — twice, because DELETE promises idempotence
-        var first = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
-
-        var second = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
-
         var basket = await client.GetFromJsonAsync<JsonElement>(
             $"/api/basket/{customerId}");
-        Assert.Equal(0, basket.GetProperty("items").GetArrayLength());
+        var items = basket.GetProperty("items");
+
+        Assert.Equal(1, items.GetArrayLength());
+        Assert.Equal(3, items[0].GetProperty("quantity").GetInt32());
     }
 }

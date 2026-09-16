@@ -21,7 +21,7 @@ public sealed class BasketEventsTests : IClassFixture<KafkaFixture>, IDisposable
     public void Dispose() => _basketServiceFactory.Dispose();
 
     [Fact]
-    public async Task Clearing_a_basket_publishes_one_fact_keyed_by_customer()
+    public async Task Checkout_publishes_one_fact_keyed_by_customer_named_by_the_reply()
     {
         var client = _basketServiceFactory.CreateClient();
         var customerId = Guid.CreateVersion7();
@@ -39,23 +39,36 @@ public sealed class BasketEventsTests : IClassFixture<KafkaFixture>, IDisposable
 
         consumer.Subscribe(KafkaBasketEvents.Topic);
 
-        var clear = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, clear.StatusCode);
+        var key = $"order-{Guid.CreateVersion7()}";
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/checkout")
+        {
+            Content = JsonContent.Create(new { customerId }),
+        };
+        request.Headers.Add("Idempotency-Key", key);
+        var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var orderId = body.GetProperty("orderId").GetGuid();
 
-        // the idempotent re-clear: still 204 — and, below, still ONE event.
-        var again = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
+        var replay = new HttpRequestMessage(HttpMethod.Post, "/api/checkout")
+        {
+            Content = JsonContent.Create(new { customerId }),
+        };
+        replay.Headers.Add("Idempotency-Key", key);
+        var again = await client.SendAsync(replay);
+        Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
 
         var first = consumer.Consume(TimeSpan.FromSeconds(20));
         Assert.NotNull(first);
         Assert.Equal(customerId.ToString(), first.Message.Key);
         var evnt = JsonSerializer.Deserialize<JsonElement>(first.Message.Value);
+        Assert.Equal(orderId, evnt.GetProperty("checkoutId").GetGuid());
         Assert.Equal(customerId, evnt.GetProperty("customerId").GetGuid());
         var line = evnt.GetProperty("lines")[0];
         Assert.Equal(productId, line.GetProperty("productId").GetGuid());
         Assert.Equal(2, line.GetProperty("quantity").GetInt32());
 
-        // why: an empty clear announced NOTHING — one checkout, one fact.
+        // why: the replay announced NOTHING — one checkout, one fact.
         var second = consumer.Consume(TimeSpan.FromSeconds(3));
         Assert.Null(second);
     }

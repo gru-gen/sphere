@@ -1,4 +1,4 @@
-using Sphere.Ordering.Application.Checkout;
+using Sphere.Ordering.Application.Pricing;
 using System.Net.Http.Json;
 
 namespace Sphere.Ordering.Infrastructure;

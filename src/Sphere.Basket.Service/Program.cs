@@ -20,7 +20,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 app.MapBasketEndpoints();
-app.MapInternalBasketEndpoints();
 
 app.Run();
 
