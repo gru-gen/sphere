@@ -8,7 +8,7 @@ using Sphere.Ordering.Infrastructure;
 namespace Sphere.Integration.Tests.Ordering;
 
 internal sealed class OrderingServiceFactory(
-    PostgresFixture postgresFixture, HttpClient catalogClient, HttpClient basketClient, string? kafkaBootstrap = null)
+    PostgresFixture postgresFixture, HttpClient catalogClient, string? kafkaBootstrap = null)
     : WebApplicationFactory<OrderingServiceMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
