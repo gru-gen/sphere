@@ -4,13 +4,14 @@ using Sphere.Ordering.Application.Pricing;
 namespace Sphere.Ordering.Application.PlaceOrder;
 
 internal sealed record PlaceOrderCommand(
-    Guid OrderId, Guid CustomerId, IReadOnlyList<PlaceOrderLine> Lines) : IRequest;
+    Guid EventId, Guid OrderId, Guid CustomerId, IReadOnlyList<PlaceOrderLine> Lines) : IRequest;
 internal sealed record PlaceOrderLine(Guid ProductId, int Quantity);
 
 internal sealed class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
 {
     public PlaceOrderCommandValidator()
     {
+        RuleFor(x => x.EventId).NotEmpty();
         RuleFor(x => x.OrderId).NotEmpty();
         RuleFor(x => x.CustomerId).NotEmpty();
         RuleFor(x => x.Lines).NotEmpty();
@@ -26,6 +27,13 @@ internal sealed class PlaceOrderCommandHandler(
 
     public async Task Handle(PlaceOrderCommand command, CancellationToken cancellationToken)
     {
+        var eventProcessed = await dbContext.ProcessedEvents.AsNoTracking()
+            .AnyAsync(e => e.EventId == command.EventId, cancellationToken);
+        if (eventProcessed)
+        {
+            return;
+        }
+
         var priceMap = await productPriceReader.GetAsync(
             [.. command.Lines.Select(l => l.ProductId)], cancellationToken);
 
@@ -41,6 +49,24 @@ internal sealed class PlaceOrderCommandHandler(
 
         var order = Order.Place(command.OrderId, command.CustomerId, lines, clock);
         dbContext.Orders.Add(order);
-        await dbContext.SaveEntitiesAsync(cancellationToken);
+        dbContext.ProcessedEvents.Add(new ProcessedEvent
+        {
+            EventId = command.EventId,
+            ProcessedAtUtc = clock.GetUtcNow(),
+        });
+
+        try
+        {
+            await dbContext.SaveEntitiesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            var alreadyDone = await dbContext.ProcessedEvents.AsNoTracking()
+                .AnyAsync(e => e.EventId == command.EventId, cancellationToken);
+            if (!alreadyDone)
+            {
+                throw;
+            }
+        }
     }
 }

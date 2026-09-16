@@ -71,7 +71,7 @@ internal sealed class BasketCheckedOutConsumer(
             using var scope = scopes.CreateScope();
             await scope.ServiceProvider.GetRequiredService<ISender>().Send(
                 new PlaceOrderCommand(
-                    evnt.CheckoutId, evnt.CustomerId,
+                    evnt.EventId, evnt.CheckoutId, evnt.CustomerId,
                     evnt.Lines.Select(l => new PlaceOrderLine(l.ProductId, l.Quantity)).ToList()),
                 cancellationToken);
         }
