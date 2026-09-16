@@ -19,7 +19,6 @@
     <ProjectReference Include="..\..\src\Sphere.Basket.Service\Sphere.Basket.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Catalog.Service\Sphere.Catalog.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Gateway\Sphere.Gateway.csproj" />
-    <ProjectReference Include="..\..\src\Sphere.Host\Sphere.Host.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Ordering.Service\Sphere.Ordering.Service.csproj" />
   </ItemGroup>
 

@@ -5,12 +5,6 @@ services:
       context: .
       dockerfile: src/Sphere.Gateway/Dockerfile
 
-  sphere.host:
-    image: ${DOCKER_REGISTRY-}spherehost
-    build:
-      context: .
-      dockerfile: src/Sphere.Host/Dockerfile
-
   sphere.catalog.service:
     image: ${DOCKER_REGISTRY-}spherecatalogservice
     build:
