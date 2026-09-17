@@ -23,6 +23,12 @@ services:
       context: .
       dockerfile: src/Sphere.Ordering.Service/Dockerfile
 
+  sphere.notification.service:
+    image: ${DOCKER_REGISTRY-}spherenotificationservice
+    build:
+      context: .
+      dockerfile: src/Sphere.Notification.Service/Dockerfile
+
   postgres:
     image: postgres:17.5-alpine
 
@@ -43,6 +49,3 @@ services:
 
 volumes:
   db-data:
-
-
-

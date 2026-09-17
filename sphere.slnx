@@ -3,6 +3,7 @@
     <Project Path="src/Sphere.Basket.Service/Sphere.Basket.Service.csproj" Id="0f7ebeec-ad23-4728-bcfc-49973a18e664" />
     <Project Path="src/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj" Id="8b8718bc-150e-4173-8b07-21b1fee4313d" />
     <Project Path="src/Sphere.Gateway/Sphere.Gateway.csproj" Id="11b988a0-a304-42f5-a6d8-0c08a2b55fc7" />
+    <Project Path="src/Sphere.Notification.Service/Sphere.Notification.Service.csproj" Id="a6079513-812d-4887-a037-ad55dd2c12b3" />
     <Project Path="src/Sphere.Ordering.Service/Sphere.Ordering.Service.csproj" Id="303ee831-a0c8-4c9e-8b09-acb472c0c82e" />
     <Project Path="src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj" Id="203eb15e-c990-4d44-8025-ee3eff20f8d5" />
   </Folder>

@@ -8,7 +8,8 @@
         "sphere.gateway": "StartDebugging",
         "sphere.catalog.service": "StartDebugging",
         "sphere.basket.service": "StartDebugging",
-        "sphere.ordering.service": "StartDebugging"
+        "sphere.ordering.service": "StartDebugging",
+        "sphere.notification.service": "StartDebugging"
       }
     }
   }
