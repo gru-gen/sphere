@@ -1,0 +1,36 @@
+{
+  "realm": "sphere",
+  "enabled": true,
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "spherefront",
+      "name": "Sphere front (browser)",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:5100/*"],
+      "webOrigins": ["http://localhost:5100"],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    },
+    {
+      "clientId": "lab-cli",
+      "name": "Lab crutch for .http files - NOT a production flow",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "grugen",
+      "enabled": true,
+      "email": "grugen@sphere.local",
+      "emailVerified": true,
+      "firstName": "GruGen",
+      "credentials": [
+        { "type": "password", "value": "1234grugen", "temporary": false }
+      ]
+    }
+  ]
+}

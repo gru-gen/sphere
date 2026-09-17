@@ -29,6 +29,18 @@ services:
   kafka:
     image: apache/kafka:4.1.0
 
+  rabbitmq:
+    image: rabbitmq:4.1-management
+
+  apicurio:
+    image: apicurio/apicurio-registry:3.0.14
+
+  redis:
+    image: redis:8.0-alpine
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+
 volumes:
   db-data:
 
