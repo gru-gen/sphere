@@ -3,13 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Sphere.Basket.Data;
 using Sphere.Catalog.Data;
+using Sphere.Notification.Service.Data;
 using Sphere.Ordering.Data;
 using Testcontainers.PostgreSql;
 
 namespace Sphere.Integration.Tests;
 
-// summary: ONE real PostgreSQL for the whole collection — the production pin,
-// started by Testcontainers, migrated once, shared by every test class.
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
@@ -28,7 +27,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         ConnectionString.Replace("Database=sphere", "Database=basket_db");
 
     public string OrderingConnectionString =>
-        CatalogConnectionString.Replace("Database=sphere", "Database=ordering_db");
+        ConnectionString.Replace("Database=sphere", "Database=ordering_db");
+
+    public string NotificationConnectionString =>
+        ConnectionString.Replace("Database=sphere", "Database=notification_db");
 
     public async Task InitializeAsync()
     {
@@ -37,24 +39,25 @@ public sealed class PostgresFixture : IAsyncLifetime
         await using (var admin = new NpgsqlConnection(ConnectionString))
         {
             await admin.OpenAsync();
-            foreach (var name in new[] { "catalog_db", "basket_db", "ordering_db" })
+            // why: the three service-owned databases, exactly like development.
+            foreach (var name in new[] { "catalog_db", "basket_db", "ordering_db", "notification_db" })
             {
                 await using var create = new NpgsqlCommand($"CREATE DATABASE {name}", admin);
                 await create.ExecuteNonQueryAsync();
             }
         }
 
-        // why: apply every hand-written migration to an EMPTY database — if any
-        // of them drifted from the model, the whole suite fails right here.
         await using var catalog = CreateCatalogContext();
         await catalog.Database.MigrateAsync();
-
         await using var basket = CreateBasketContext();
         await basket.Database.MigrateAsync();
-
         await using var ordering = CreateOrderingContext();
         await ordering.Database.MigrateAsync();
+        await using var notification = CreateNotificationContext();
+        await notification.Database.MigrateAsync();
     }
+
+    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
     internal CatalogDbContext CreateCatalogContext() =>
         new(new DbContextOptionsBuilder<CatalogDbContext>()
@@ -66,22 +69,24 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     internal OrderingDbContext CreateOrderingContext(IPublisher? publisher = null) =>
         new(new DbContextOptionsBuilder<OrderingDbContext>()
-            .UseNpgsql(OrderingConnectionString).Options, publisher ?? new NoopPublisher());
+            .UseNpgsql(OrderingConnectionString).Options,
+            publisher ?? new NoopPublisher());
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    internal NotificationDbContext CreateNotificationContext() =>
+        new(new DbContextOptionsBuilder<NotificationDbContext>()
+            .UseNpgsql(NotificationConnectionString).Options);
 
-    // summary: a publisher that swallows events — for data-layer tests that are
-    // not about the pipeline. Pipeline tests wire the real MediatR instead.
     private sealed class NoopPublisher : IPublisher
     {
-        public Task Publish(object notification, CancellationToken cancellationToken = default)
+        public Task Publish(object notification, CancellationToken ct = default)
             => Task.CompletedTask;
 
-        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
-            where TNotification : INotification
+        public Task Publish<TNotification>(TNotification notification,
+            CancellationToken ct = default) where TNotification : INotification
             => Task.CompletedTask;
     }
 }
 
 [CollectionDefinition("postgres")]
 public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>;
+

@@ -1,6 +1,7 @@
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using FluentValidation;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
+using Sphere.Ordering.Application.Notifications;
 using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Features;
 using Sphere.Ordering.Infrastructure;
@@ -51,6 +53,29 @@ public static class OrderingModule
             ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
         builder.Services.AddSingleton(new KafkaSettings(bootstrapServers));
         builder.Services.AddHostedService<BasketCheckedOutConsumer>();
+
+        var rabbit = new RabbitConnectionSettings(
+            builder.Configuration["Rabbit:Host"]
+                ?? throw new InvalidOperationException("Setting 'Rabbit:Host' is missing."),
+            ushort.Parse(builder.Configuration["Rabbit:Port"]
+                ?? throw new InvalidOperationException("Setting 'Rabbit:Port' is missing.")),
+            builder.Configuration["Rabbit:User"]
+                ?? throw new InvalidOperationException("Setting 'Rabbit:User' is missing."),
+            builder.Configuration["Rabbit:Pass"]
+                ?? throw new InvalidOperationException("Setting 'Rabbit:Pass' is missing."));
+        builder.Services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(rabbit.Host, rabbit.Port, "/", h =>
+                {
+                    h.Username(rabbit.User);
+                    h.Password(rabbit.Password);
+                });
+            });
+        });
+
+        builder.Services.AddScoped<IOrderNotifier, MassTransitOrderNotifier>();
 
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();
         builder.Services.AddExceptionHandler<DomainProblemHandler>();

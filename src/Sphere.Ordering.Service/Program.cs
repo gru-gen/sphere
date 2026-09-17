@@ -23,4 +23,4 @@ app.MapOrderingEndpoints();
 
 app.Run();
 
-public sealed class OrderingServiceMarker;
+public sealed class NotificationServiceMarker;

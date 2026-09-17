@@ -9,6 +9,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.Kafka" />
+    <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="MassTransit" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -19,6 +21,7 @@
     <ProjectReference Include="..\..\src\Sphere.Basket.Service\Sphere.Basket.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Catalog.Service\Sphere.Catalog.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Gateway\Sphere.Gateway.csproj" />
+    <ProjectReference Include="..\..\src\Sphere.Notification.Service\Sphere.Notification.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Ordering.Service\Sphere.Ordering.Service.csproj" />
   </ItemGroup>
 

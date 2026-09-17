@@ -16,6 +16,8 @@ builder.Services.AddDbContext<NotificationDbContext>(o => o.UseNpgsql(connection
 var rabbit = new RabbitSettings(
     builder.Configuration["Rabbit:Host"]
         ?? throw new InvalidOperationException("Setting 'Rabbit:Host' is missing."),
+    ushort.Parse(builder.Configuration["Rabbit:Port"]
+        ?? throw new InvalidOperationException("Setting 'Rabbit:Port' is missing.")),
     builder.Configuration["Rabbit:User"]
         ?? throw new InvalidOperationException("Setting 'Rabbit:User' is missing."),
     builder.Configuration["Rabbit:Pass"]
@@ -30,7 +32,7 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(rabbit.Host, "/", h =>
+        cfg.Host(rabbit.Host, rabbit.Port, "/", h =>
         {
             h.Username(rabbit.User);
             h.Password(rabbit.Pass);
@@ -82,3 +84,5 @@ if (app.Environment.IsDevelopment())
 app.MapDefaultEndpoints();
 
 app.Run();
+
+public sealed class OrderingServiceMarker;

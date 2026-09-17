@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sphere.Ordering.Application.Notifications;
 using Sphere.Ordering.Application.Pricing;
 
 namespace Sphere.Ordering.Application.PlaceOrder;
@@ -21,7 +22,8 @@ internal sealed class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderC
 internal sealed class PlaceOrderCommandHandler(
     IProductPriceReader productPriceReader,
     OrderingDbContext dbContext,
-    TimeProvider clock) : IRequestHandler<PlaceOrderCommand>
+    TimeProvider clock,
+    IOrderNotifier notifier) : IRequestHandler<PlaceOrderCommand>
 {
     private const string Currency = "EUR";
 
@@ -67,6 +69,10 @@ internal sealed class PlaceOrderCommandHandler(
             {
                 throw;
             }
+
+            return;
         }
+
+        await notifier.SendConfirmationAsync(order.Id, order.CustomerId, order.Total, order.Currency, cancellationToken);
     }
 }

@@ -45,6 +45,10 @@ services:
       - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=ordering_db;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
       - Kafka__BootstrapServers=kafka:9092
+      - Rabbit__Host=rabbitmq
+      - Rabbit__Port=5672
+      - Rabbit__User=sphere
+      - Rabbit__Pass=sphere-dev
     ports:
       - "8080"
     depends_on:
@@ -54,6 +58,8 @@ services:
         condition: service_started
       kafka:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   sphere.notification.service:
     environment:
@@ -61,6 +67,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__notification=Host=postgres;Port=5432;Database=notification_db;Username=sphere;Password=sphere-dev
       - Rabbit__Host=rabbitmq
+      - Rabbit__Port=5672
       - Rabbit__User=sphere
       - Rabbit__Pass=sphere-dev
       - Kafka__BootstrapServers=kafka:9092
