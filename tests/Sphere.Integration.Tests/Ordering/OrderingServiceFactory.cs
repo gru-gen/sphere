@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Sphere.Ordering.Application.Events;
 using Sphere.Ordering.Application.Notifications;
 using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Infrastructure;
@@ -17,6 +18,8 @@ internal sealed class OrderingServiceFactory(
     // the recorder keeps the commands in a list instead of on a wire.
     public RecordingOrderNotifier Notifier { get; } = new();
 
+    public RecordingOrderingEvents OrderingEvents { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -25,6 +28,7 @@ internal sealed class OrderingServiceFactory(
         // unused because the client below already carries the test address.
         builder.UseSetting("Catalog:BaseUrl", "http://catalog.test");
         builder.UseSetting("Kafka:BootstrapServers", kafkaBootstrap ?? "unused:9092");
+        builder.UseSetting("Kafka:Source", "/test/ordering");
         builder.UseSetting("Rabbit:Host", rabbitHost ?? "unused");
         builder.UseSetting("Rabbit:Port", (rabbitPort == 0 ? (ushort)5672 : rabbitPort).ToString());
         builder.UseSetting("Rabbit:User", "shopsphere");
@@ -43,6 +47,9 @@ internal sealed class OrderingServiceFactory(
                 var consumer = services.Single(d =>
                     d.ImplementationType == typeof(BasketCheckedOutConsumer));
                 services.Remove(consumer);
+
+                services.RemoveAll<IOrderingEvents>();
+                services.AddSingleton<IOrderingEvents>(OrderingEvents);
             }
 
             if (rabbitHost is null)

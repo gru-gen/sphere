@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shopsphere.local/order-placed.v1.json",
+  "title": "OrderPlaced v1",
+  "description": "An order was committed by the Ordering service. The first event DESIGNED under the registry discipline: this schema existed before the first payload did.",
+  "type": "object",
+  "required": ["eventId", "orderId", "customerId", "total", "currency", "placedAtUtc"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "orderId": { "type": "string", "format": "uuid" },
+    "customerId": { "type": "string", "format": "uuid" },
+    "total": { "type": "number", "minimum": 0 },
+    "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+    "placedAtUtc": { "type": "string", "format": "date-time" }
+  }
+}

@@ -46,6 +46,7 @@ services:
       - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=ordering_db;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
       - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Source=/sphere/ordering
       - Rabbit__Host=rabbitmq
       - Rabbit__Port=5672
       - Rabbit__User=sphere

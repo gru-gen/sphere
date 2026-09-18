@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sphere.Ordering.Application.Behaviors;
 using Sphere.Ordering.Application.CancelOrder;
+using Sphere.Ordering.Application.Events;
 using Sphere.Ordering.Application.Notifications;
 using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Features;
@@ -53,6 +54,14 @@ public static class OrderingModule
             ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
         builder.Services.AddSingleton(new KafkaSettings(bootstrapServers));
         builder.Services.AddHostedService<BasketCheckedOutConsumer>();
+
+        var source = builder.Configuration["Kafka:Source"]
+                ?? throw new InvalidOperationException("Setting 'Kafka:Source' is missing.");
+        builder.Services.AddSingleton<IOrderingEvents>(sp => new KafkaOrderingEvents(
+            bootstrapServers,
+            source,
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<ILogger<KafkaOrderingEvents>>()));
 
         var rabbit = new RabbitConnectionSettings(
             builder.Configuration["Rabbit:Host"]

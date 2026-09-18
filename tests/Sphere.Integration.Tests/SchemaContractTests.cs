@@ -1,5 +1,6 @@
 using Json.Schema;
 using Sphere.Basket.Contracts;
+using Sphere.Ordering.Contracts.Events;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -27,6 +28,21 @@ public sealed class SchemaContractTests
 
         Assert.True(result.IsValid);
     }
+
+    [Fact]
+    public void The_order_placed_event_satisfies_its_contract()
+    {
+        var schema = LoadSchema("order-placed.v1.json");
+        var evt = new OrderPlaced(
+            Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(),
+            59.90m, "EUR", DateTimeOffset.UtcNow);
+
+        var result = schema.Evaluate(
+            JsonNode.Parse(JsonSerializer.Serialize(evt, Json)));
+
+        Assert.True(result.IsValid);
+    }
+
 
     [Fact]
     public void A_payload_missing_the_customer_fails_the_contract()

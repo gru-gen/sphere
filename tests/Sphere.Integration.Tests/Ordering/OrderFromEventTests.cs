@@ -63,6 +63,9 @@ public sealed class OrderFromEventTests : IDisposable
 
         var ask = Assert.Single(_orderingServiceFactory.Notifier.Sent);
         Assert.Equal(order.Id, ask.OrderId);
+
+        var fact = Assert.Single(_orderingServiceFactory.OrderingEvents.Published);
+        Assert.Equal(order.Id, fact.OrderId);
     }
 
     [Fact]
@@ -79,5 +82,6 @@ public sealed class OrderFromEventTests : IDisposable
         await using var db = _postgresFixture.CreateOrderingContext();
         Assert.Equal(1, await db.Orders.CountAsync(o => o.CustomerId == command.CustomerId));
         Assert.Single(_orderingServiceFactory.Notifier.Sent);
+        Assert.Single(_orderingServiceFactory.OrderingEvents.Published);
     }
 }
