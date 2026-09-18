@@ -10,11 +10,16 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.Kafka" />
     <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="MassTransit" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\contracts\**\*.json" LinkBase="contracts" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

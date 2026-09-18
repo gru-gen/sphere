@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Logging;
 using Sphere.Basket.Contracts;
+using System.Text;
 using System.Text.Json;
 
 namespace Sphere.Basket.Infrastructure;
@@ -14,14 +15,16 @@ public sealed class KafkaBasketEvents : IBasketEvents, IDisposable
         new(JsonSerializerDefaults.Web);
 
     private readonly string _bootstrapServers;
+    private readonly string _source;
     private readonly IProducer<string, string> _producer;
     private readonly TimeProvider _clock;
     private readonly ILogger<KafkaBasketEvents> _logger;
 
     public KafkaBasketEvents(
-        string bootstrapServers, TimeProvider clock, ILogger<KafkaBasketEvents> logger)
+        string bootstrapServers, string source, TimeProvider clock, ILogger<KafkaBasketEvents> logger)
     {
         _bootstrapServers = bootstrapServers;
+        _source = source;
         // why: the taught defaults — every in-sync replica must confirm
         // (acks=all), and retries cannot duplicate (idempotence: the broker
         // discards resends by producer id + sequence number).
@@ -76,7 +79,16 @@ public sealed class KafkaBasketEvents : IBasketEvents, IDisposable
         var message = new Message<string, string>
         {
             Key = basket.CustomerId.ToString(),
-            Value = JsonSerializer.Serialize(evnt, Json)
+            Value = JsonSerializer.Serialize(evnt, Json),
+            //Headers = new Headers
+            //{
+            //    { "content-type", Encoding.UTF8.GetBytes("application/json") },
+            //    { "ce_specversion", Encoding.UTF8.GetBytes("1.0") },
+            //    { "ce_id", Encoding.UTF8.GetBytes(evnt.EventId.ToString()) },
+            //    { "ce_source", Encoding.UTF8.GetBytes(_source) },
+            //    { "ce_type", Encoding.UTF8.GetBytes(Topic) },
+            //    { "ce_time", Encoding.UTF8.GetBytes(evnt.CheckedOutAtUtc.ToString("O")) },
+            //},
         };
 
         try

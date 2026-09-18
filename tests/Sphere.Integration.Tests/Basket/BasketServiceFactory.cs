@@ -17,6 +17,7 @@ public sealed class BasketServiceFactory(PostgresFixture postgresFixture, string
         builder.UseSetting("ConnectionStrings:basket", postgresFixture.BasketConnectionString);
 
         builder.UseSetting("Kafka:BootstrapServers", kafkaBootstrap ?? "unused:9092");
+        builder.UseSetting("Kafka:Source", "/test/basket");
 
         if (kafkaBootstrap is null)
         {

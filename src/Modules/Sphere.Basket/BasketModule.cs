@@ -29,8 +29,11 @@ public static class BasketModule
         var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
             ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
 
+        var source = builder.Configuration["Kafka:Source"]
+           ?? throw new InvalidOperationException("Setting 'Kafka:Source' is missing.");
         builder.Services.AddSingleton<IBasketEvents>(sp => new KafkaBasketEvents(
             bootstrapServers,
+            source,
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<ILogger<KafkaBasketEvents>>()));
 

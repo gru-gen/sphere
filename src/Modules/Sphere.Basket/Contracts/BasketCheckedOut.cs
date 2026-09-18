@@ -5,6 +5,6 @@ public sealed record BasketCheckedOut(
     Guid CheckoutId,
     Guid CustomerId,
     IReadOnlyList<BasketCheckedOutLine> Lines,
-    DateTimeOffset OccuredAtUtc);
+    DateTimeOffset CheckedOutAtUtc);
 
 public sealed record BasketCheckedOutLine(Guid ProductId, int Quantity);

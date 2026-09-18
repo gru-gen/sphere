@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.shopsphere.local/basket-checked-out.v1.json",
+  "title": "BasketCheckedOut v1",
+  "description": "A customer completed checkout. Past tense, open audience - anyone may subscribe. This schema states the REQUIRED MINIMUM; consumers read tolerantly, so additions are legal and expected.",
+  "type": "object",
+  "required": ["eventId", "checkoutId", "customerId", "lines", "checkedOutAtUtc"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "checkoutId": { "type": "string", "format": "uuid" },
+    "customerId": { "type": "string", "format": "uuid" },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["productId", "quantity"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "checkedOutAtUtc": { "type": "string", "format": "date-time" }
+  }
+}

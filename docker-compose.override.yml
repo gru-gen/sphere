@@ -30,6 +30,7 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__basket=Host=postgres;Port=5432;Database=basket_db;Username=sphere;Password=sphere-dev
       - Kafka__BootstrapServers=kafka:9092
+      - Kafka__Source=/sphere/basket
     ports:
       - "8080"
     depends_on:
