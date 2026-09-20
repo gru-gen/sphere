@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="43ffb1af-d768-47b8-bcbb-3b6f33c4048a" />
+  </Folder>
+  <Folder Name="/src/Catalog/">
+    <Project Path="src/Catalog/Sphere.Catalog/Sphere.Catalog.csproj" Id="65acff80-ef46-472b-9900-c52932225354" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="9ad129d9-1800-422d-a765-03f9d5e9a9c0" />
+  </Folder>
+</Solution>
