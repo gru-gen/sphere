@@ -2,10 +2,17 @@
   <Folder Name="/src/">
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="43ffb1af-d768-47b8-bcbb-3b6f33c4048a" />
   </Folder>
+  <Folder Name="/src/Basket/">
+    <Project Path="src/Basket/Sphere.Basket/Sphere.Basket.csproj" Id="4c56cae6-5062-452f-87f3-aafd1ec83cdd" />
+  </Folder>
   <Folder Name="/src/Catalog/">
     <Project Path="src/Catalog/Sphere.Catalog/Sphere.Catalog.csproj" Id="65acff80-ef46-472b-9900-c52932225354" />
   </Folder>
+  <Folder Name="/src/Ordering/">
+    <Project Path="src/Ordering/Sphere.Ordering/Sphere.Ordering.csproj" Id="c45f59f6-c04b-4777-b79e-cb9fbcfa602e" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="9ad129d9-1800-422d-a765-03f9d5e9a9c0" />
+    <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="f96c222d-16fc-482f-860d-bf420962507f" />
   </Folder>
 </Solution>
