@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Npgsql;
 
 namespace Sphere.Catalog.Features.Products;
 
@@ -22,6 +23,7 @@ internal static class CreateProduct
     internal static async Task<Results<Created<ProductResponse>, Conflict<string>>> Handle(
         Request request, CatalogDbContext dbContext, TimeProvider clock, CancellationToken cancellationToken)
     {
+        // Two requests can still pass this line together; the check that cannot lose is below.
         var skuTaken = await dbContext.Products.AnyAsync(p => p.Sku == request.Sku, cancellationToken);
         if (skuTaken)
         {
@@ -39,7 +41,16 @@ internal static class CreateProduct
         };
 
         dbContext.Products.Add(product);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when(ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            // why: the unique index is the REAL guard; when the race happens, it
+            // speaks SQLSTATE 23505 and the API translates that into a calm 409.
+            return TypedResults.Conflict($"Sku '{request.Sku}' is already used.");
+        }
 
         return TypedResults.Created($"/api/products/{product.Id}", product.ToResponse());
     }
