@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Sphere.Catalog.Tests" />
+    <InternalsVisibleTo Include="Sphere.Integration.Tests" />
   </ItemGroup>
 
 </Project>

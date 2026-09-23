@@ -13,6 +13,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="9ad129d9-1800-422d-a765-03f9d5e9a9c0" />
+    <Project Path="tests/Sphere.Integration.Tests/Sphere.Integration.Tests.csproj" Id="f477b6e8-ed63-4978-a1fa-81ce56b5dfd5" />
     <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="f96c222d-16fc-482f-860d-bf420962507f" />
   </Folder>
 </Solution>
