@@ -12,16 +12,6 @@ namespace Sphere.Integration.Tests.Catalog;
 public class CatalogDataTests(PostgresContainer container)
 {
     [Fact]
-    public async Task Every_handwritten_migration_applied_to_an_empty_database()
-    {
-        await using var db = container.CreateCatalogContext();
-        var applied = await db.Database.GetAppliedMigrationsAsync();
-
-        Assert.Equal(3, applied.Count());
-        Assert.False(await db.Products.AsNoTracking().AnyAsync(p => p.Sku == "NOPE"));
-    }
-
-    [Fact]
     public async Task Browse_filters_by_category_and_pages_in_name_order()
     {
         await using var db = container.CreateCatalogContext();

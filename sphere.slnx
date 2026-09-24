@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Sphere.Gateway/Sphere.Gateway.csproj" Id="a20ab43b-c524-4f83-80fb-a315735d2f12" />
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="43ffb1af-d768-47b8-bcbb-3b6f33c4048a" />
   </Folder>
   <Folder Name="/src/Basket/">
     <Project Path="src/Basket/Sphere.Basket/Sphere.Basket.csproj" Id="4c56cae6-5062-452f-87f3-aafd1ec83cdd" />
   </Folder>
   <Folder Name="/src/Catalog/">
+    <Project Path="src/Catalog/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj" Id="438087a4-f5c6-4a38-a115-992eeaab43b6" />
     <Project Path="src/Catalog/Sphere.Catalog/Sphere.Catalog.csproj" Id="65acff80-ef46-472b-9900-c52932225354" />
   </Folder>
   <Folder Name="/src/Ordering/">

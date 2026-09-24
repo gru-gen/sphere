@@ -21,6 +21,7 @@ public static class BasketModule
         builder.Services.AddValidatorsFromAssemblyContaining<BasketDbContext>(includeInternalTypes: true);
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "basket-db");
         builder.Services.AddScoped<IBasketStore, BasketStore>();
+        builder.Services.AddSingleton(TimeProvider.System);
 
         return builder;
     }

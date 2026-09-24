@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sphere.Basket.Contracts;
-using Sphere.Catalog.Contracts;
 using Sphere.Ordering.Application.Cancel;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Behaviors;

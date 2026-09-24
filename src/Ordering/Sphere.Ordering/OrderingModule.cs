@@ -11,6 +11,7 @@ using Sphere.Ordering.Application.Cancel;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Behaviors;
 using Sphere.Ordering.Features;
+using Sphere.Ordering.Infrastructure;
 
 namespace Sphere.Ordering;
 
@@ -24,6 +25,7 @@ public static class OrderingModule
         builder.Services.AddSingleton(new OrderingReadDb(connectionString));
         builder.Services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(includeInternalTypes: true);
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "ordering-db");
+        builder.Services.AddSingleton(TimeProvider.System);
 
         builder.Services.AddMediatR(cfg =>
         {
@@ -31,6 +33,14 @@ public static class OrderingModule
 
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBeahvior<,>));
+        });
+
+        var catalogBaseUrl = builder.Configuration["Catalog:BaseUrl"]
+            ?? throw new InvalidOperationException("Setting 'Catalog:BaseUrl' is missing.");
+        builder.Services.AddHttpClient<IProductPriceReader, CatalogHttpPriceReader>(client =>
+        {
+            client.BaseAddress = new Uri(catalogBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(2);
         });
 
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();

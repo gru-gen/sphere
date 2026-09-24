@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Sphere.Basket.Data;
 using Sphere.Catalog.Data;
 using Sphere.Ordering.Data;
@@ -20,9 +21,19 @@ public sealed class PostgresContainer : IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
+    public string CatalogConnectionString =>
+        ConnectionString.Replace("Database=sphere", "Database=catalog_db");
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
+
+        await using (var admin = new NpgsqlConnection(ConnectionString))
+        {
+            await admin.OpenAsync();
+            await using var create = new NpgsqlCommand("CREATE DATABASE catalog_db", admin);
+            await create.ExecuteNonQueryAsync();
+        }
 
         await using var catalog = CreateCatalogContext();
         await catalog.Database.MigrateAsync();
@@ -31,13 +42,14 @@ public sealed class PostgresContainer : IAsyncLifetime
         await basket.Database.MigrateAsync();
 
         await using var ordering = CreateOrderingContext();
-        await basket.Database.MigrateAsync();
+        await ordering.Database.MigrateAsync();
     }
 
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
     internal CatalogDbContext CreateCatalogContext() =>
-        new(Options<CatalogDbContext>());
+        new(new DbContextOptionsBuilder<CatalogDbContext>()
+            .UseNpgsql(CatalogConnectionString).Options);
 
     internal BasketDbContext CreateBasketContext() =>
         new(Options<BasketDbContext>());
