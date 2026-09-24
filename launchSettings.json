@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "sphere.gateway": "StartDebugging",
+        "sphere.host": "StartDebugging",
+        "sphere.catalog.service": "StartDebugging"
+      }
+    }
+  }
+}

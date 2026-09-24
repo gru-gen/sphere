@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "sphere (compose)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "sphere",
+      "Username": "sphere",
+      "PassFile": "/pgadmin4/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}
