@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.AddServiceDefaults();
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 var app = builder.Build();
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapDefaultEndpoints();
 
 app.MapReverseProxy();
 

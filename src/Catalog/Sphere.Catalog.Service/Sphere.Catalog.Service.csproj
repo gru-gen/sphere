@@ -11,6 +11,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\Sphere.ServiceDefaults\Sphere.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Sphere.Catalog\Sphere.Catalog.csproj" />
   </ItemGroup>
   

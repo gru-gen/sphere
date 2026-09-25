@@ -14,6 +14,7 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["Directory.Build.props", "."]
 COPY ["src/Catalog/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj", "src/Catalog/Sphere.Catalog.Service/"]
+COPY ["src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj", "src/Sphere.ServiceDefaults/"]
 COPY ["src/Catalog/Sphere.Catalog/Sphere.Catalog.csproj", "src/Catalog/Sphere.Catalog/"]
 RUN dotnet restore "./src/Catalog/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj"
 COPY . .

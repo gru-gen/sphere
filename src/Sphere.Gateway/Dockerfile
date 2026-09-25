@@ -14,6 +14,7 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["Directory.Build.props", "."]
 COPY ["src/Sphere.Gateway/Sphere.Gateway.csproj", "src/Sphere.Gateway/"]
+COPY ["src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj", "src/Sphere.ServiceDefaults/"]
 RUN dotnet restore "./src/Sphere.Gateway/Sphere.Gateway.csproj"
 COPY . .
 WORKDIR "/src/src/Sphere.Gateway"
