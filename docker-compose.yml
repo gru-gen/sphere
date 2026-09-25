@@ -18,6 +18,12 @@ services:
       context: .
       dockerfile: src/Catalog/Sphere.Catalog.Service/Dockerfile
 
+  sphere.basket.service:
+    image: ${DOCKER_REGISTRY-}spherebasketservice
+    build:
+      context: .
+      dockerfile: src/Basket/Sphere.Basket.Service/Dockerfile
+
   postgres:
     image: postgres:17.5-alpine
 
@@ -26,4 +32,3 @@ services:
 
 volumes:
   db-data:
-

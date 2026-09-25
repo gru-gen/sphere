@@ -5,6 +5,7 @@
     <Project Path="src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj" Id="baa4bc55-959d-4f89-bb9a-177c2c9f00f3" />
   </Folder>
   <Folder Name="/src/Basket/">
+    <Project Path="src/Basket/Sphere.Basket.Service/Sphere.Basket.Service.csproj" Id="06e6151a-6d8d-4c20-aa8c-e00e35d0f469" />
     <Project Path="src/Basket/Sphere.Basket/Sphere.Basket.csproj" Id="4c56cae6-5062-452f-87f3-aafd1ec83cdd" />
   </Folder>
   <Folder Name="/src/Catalog/">

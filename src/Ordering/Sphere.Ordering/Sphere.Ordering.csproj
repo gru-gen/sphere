@@ -17,11 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Basket\Sphere.Basket\Sphere.Basket.csproj" />
-    <ProjectReference Include="..\..\Catalog\Sphere.Catalog\Sphere.Catalog.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="Sphere.Ordering.Tests" />
     <InternalsVisibleTo Include="Sphere.Integration.Tests" />
   </ItemGroup>

@@ -2,7 +2,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Sphere.Basket.Contracts;
 using Sphere.Ordering.Application.Cancel;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Behaviors;
@@ -14,14 +13,14 @@ namespace Sphere.Integration.Tests;
 // summary: the money test — the REAL MediatR pipeline and the REAL database;
 // only the sibling modules are stubbed at their public contracts.
 [Collection("postgres")]
-public class CheckoutPipelineTests(PostgresContainer container)
+public class CheckoutPipelineTests(PostgresContainer postgresContainer)
 {
     [Fact]
     public async Task Checkout_commits_order_lines_and_history_atomically_then_clears()
     {
         var basket = new StubBasket(
-            new BasketSnapshotItem(Guid.CreateVersion7(), 2),
-            new BasketSnapshotItem(Guid.CreateVersion7(), 1));
+            new CustomerBasketItem(Guid.CreateVersion7(), 2),
+            new CustomerBasketItem(Guid.CreateVersion7(), 1));
         await using var provider = BuildPipeline(basket);
         var customerId = Guid.CreateVersion7();
 
@@ -32,7 +31,7 @@ public class CheckoutPipelineTests(PostgresContainer container)
                 .Send(new CheckoutCommand(customerId));
         }
 
-        await using var db = container.CreateOrderingContext();
+        await using var db = postgresContainer.CreateOrderingContext();
         var order = await db.Orders.AsNoTracking()
             .Include(o => o.Lines).SingleAsync(o => o.Id == result.OrderId);
         Assert.Equal(2, order.Lines.Count);
@@ -44,7 +43,7 @@ public class CheckoutPipelineTests(PostgresContainer container)
     [Fact]
     public async Task Cancelling_twice_is_refused_by_the_domain()
     {
-        var basket = new StubBasket(new BasketSnapshotItem(Guid.CreateVersion7(), 1));
+        var basket = new StubBasket(new CustomerBasketItem(Guid.CreateVersion7(), 1));
         await using var provider = BuildPipeline(basket);
 
         await using var scope = provider.CreateAsyncScope();
@@ -55,8 +54,32 @@ public class CheckoutPipelineTests(PostgresContainer container)
         await Assert.ThrowsAsync<DomainException>(
             () => sender.Send(new CancelOrderCommand(placed.OrderId)));
 
-        await using var db = container.CreateOrderingContext();
+        await using var db = postgresContainer.CreateOrderingContext();
         Assert.Equal(2, await db.OrderHistory.CountAsync(h => h.OrderId == placed.OrderId));
+    }
+
+    [Fact]
+    public async Task Two_racers_one_key_one_order()
+    {
+        var basket = new StubBasket(new CustomerBasketItem(Guid.CreateVersion7(), 1));
+        await using var provider = BuildPipeline(basket);
+        var customerId = Guid.CreateVersion7();
+        // why: the stub basket never empties — the race under test is the KEY
+        // fence, isolated from the basket-clearing race a real retry heals.
+        var command = new CheckoutCommand(customerId, $"race-{customerId}");
+
+        async Task<CheckoutResult> RunAsync()
+        {
+            await using var scope = provider.CreateAsyncScope();
+            return await scope.ServiceProvider.GetRequiredService<ISender>()
+                .Send(command);
+        }
+
+        var results = await Task.WhenAll(RunAsync(), RunAsync());
+
+        Assert.Equal(results[0].OrderId, results[1].OrderId);
+        await using var db = postgresContainer.CreateOrderingContext();
+        Assert.Equal(1, await db.Orders.CountAsync(o => o.CustomerId == customerId));
     }
 
     private ServiceProvider BuildPipeline(StubBasket basket)
@@ -64,7 +87,7 @@ public class CheckoutPipelineTests(PostgresContainer container)
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(TimeProvider.System);
-        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(container.ConnectionString));
+        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(postgresContainer.ConnectionString));
         services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(
             includeInternalTypes: true);
         services.AddMediatR(cfg =>
@@ -73,17 +96,17 @@ public class CheckoutPipelineTests(PostgresContainer container)
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBeahvior<,>));
         });
-        services.AddSingleton<IBasketStore>(basket);
+        services.AddSingleton<ICustomerBasket>(basket);
         services.AddSingleton<IProductPriceReader>(new StubPrices());
         return services.BuildServiceProvider();
     }
 
-    private sealed class StubBasket(params BasketSnapshotItem[] items) : IBasketStore
+    private sealed class StubBasket(params CustomerBasketItem[] lines) : ICustomerBasket
     {
         public bool Cleared { get; private set; }
 
-        public Task<BasketSnapshot> GetAsync(Guid customerId, CancellationToken ct)
-            => Task.FromResult(new BasketSnapshot(customerId, items));
+        public Task<CustomerBasket> GetAsync(Guid customerId, CancellationToken ct)
+            => Task.FromResult(new CustomerBasket(customerId, lines));
 
         public Task ClearAsync(Guid customerId, CancellationToken ct)
         {

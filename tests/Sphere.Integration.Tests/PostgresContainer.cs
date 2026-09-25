@@ -24,6 +24,9 @@ public sealed class PostgresContainer : IAsyncLifetime
     public string CatalogConnectionString =>
         ConnectionString.Replace("Database=sphere", "Database=catalog_db");
 
+    public string BasketConnectionString =>
+        ConnectionString.Replace("Database=sphere", "Database=basket_db");
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
@@ -31,8 +34,12 @@ public sealed class PostgresContainer : IAsyncLifetime
         await using (var admin = new NpgsqlConnection(ConnectionString))
         {
             await admin.OpenAsync();
-            await using var create = new NpgsqlCommand("CREATE DATABASE catalog_db", admin);
-            await create.ExecuteNonQueryAsync();
+
+            foreach (var name in new[] { "catalog_db", "basket_db" })
+            {
+                await using var create = new NpgsqlCommand($"CREATE DATABASE {name}", admin);
+                await create.ExecuteNonQueryAsync();
+            }
         }
 
         await using var catalog = CreateCatalogContext();
@@ -52,7 +59,8 @@ public sealed class PostgresContainer : IAsyncLifetime
             .UseNpgsql(CatalogConnectionString).Options);
 
     internal BasketDbContext CreateBasketContext() =>
-        new(Options<BasketDbContext>());
+        new(new DbContextOptionsBuilder<BasketDbContext>()
+            .UseNpgsql(BasketConnectionString).Options);
 
     internal OrderingDbContext CreateOrderingContext(IPublisher? publisher = null) =>
         new(Options<OrderingDbContext>(), publisher ?? new NoopPublisher());

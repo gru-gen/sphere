@@ -6,7 +6,8 @@
       "serviceActions": {
         "sphere.gateway": "StartDebugging",
         "sphere.host": "StartDebugging",
-        "sphere.catalog.service": "StartDebugging"
+        "sphere.catalog.service": "StartDebugging",
+        "sphere.basket.service": "StartDebugging"
       }
     }
   }
