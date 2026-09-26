@@ -30,5 +30,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:9.7
 
+  kafka:
+    image: apache/kafka:4.1.0
+
 volumes:
   db-data:

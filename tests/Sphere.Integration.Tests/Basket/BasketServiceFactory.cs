@@ -1,14 +1,35 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Sphere.Basket.Contracts;
 
 namespace Sphere.Integration.Tests.Basket;
 
-public sealed class BasketServiceFactory(PostgresContainer postgresContainer)
+public sealed class BasketServiceFactory(PostgresContainer postgresContainer, string? kafkaBootstrap = null)
     : WebApplicationFactory<BasketServiceMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("ConnectionStrings:basket", postgresContainer.BasketConnectionString);
+        builder.UseSetting("Kafka:BootstrapServers", kafkaBootstrap ?? "unused:9092");
+
+        if (kafkaBootstrap is null)
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IBasketEvents>();
+                services.AddSingleton<IBasketEvents>(new NoBasketEvents());
+            });
+        }
+    }
+
+    private sealed class NoBasketEvents : IBasketEvents
+    {
+        public Task EnsureTopicAsync() => Task.CompletedTask;
+
+        public Task PublishCheckedOutAsync(BasketSnapshot snapshot, CancellationToken ct)
+            => Task.CompletedTask;
     }
 }
