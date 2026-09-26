@@ -13,6 +13,7 @@
     <Project Path="src/Catalog/Sphere.Catalog/Sphere.Catalog.csproj" Id="65acff80-ef46-472b-9900-c52932225354" />
   </Folder>
   <Folder Name="/src/Ordering/">
+    <Project Path="src/Ordering/Sphere.Ordering.Service/Sphere.Ordering.Service.csproj" Id="03404ef9-d4aa-4482-b9c7-c04ad84d4354" />
     <Project Path="src/Ordering/Sphere.Ordering/Sphere.Ordering.csproj" Id="c45f59f6-c04b-4777-b79e-cb9fbcfa602e" />
   </Folder>
   <Folder Name="/tests/">

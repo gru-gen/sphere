@@ -24,6 +24,12 @@ services:
       context: .
       dockerfile: src/Basket/Sphere.Basket.Service/Dockerfile
 
+  sphere.ordering.service:
+    image: ${DOCKER_REGISTRY-}sphereorderingservice
+    build:
+      context: .
+      dockerfile: src/Ordering/Sphere.Ordering.Service/Dockerfile
+
   postgres:
     image: postgres:17.5-alpine
 
@@ -35,3 +41,4 @@ services:
 
 volumes:
   db-data:
+

@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Basket\Sphere.Basket.Service\Sphere.Basket.Service.csproj" />
     <ProjectReference Include="..\..\src\Catalog\Sphere.Catalog.Service\Sphere.Catalog.Service.csproj" />
+    <ProjectReference Include="..\..\src\Ordering\Sphere.Ordering.Service\Sphere.Ordering.Service.csproj" />
     <ProjectReference Include="..\..\src\Sphere.Host\Sphere.Host.csproj" />
   </ItemGroup>
 

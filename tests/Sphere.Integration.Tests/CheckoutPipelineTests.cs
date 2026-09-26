@@ -87,7 +87,7 @@ public class CheckoutPipelineTests(PostgresContainer postgresContainer)
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(TimeProvider.System);
-        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(postgresContainer.ConnectionString));
+        services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(postgresContainer.OrderingConnectionString));
         services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(
             includeInternalTypes: true);
         services.AddMediatR(cfg =>

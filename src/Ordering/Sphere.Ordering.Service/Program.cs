@@ -1,11 +1,11 @@
-using Scalar.AspNetCore;
+using Sphere.Ordering;
 using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+builder.AddOrderingModule();
 
 var app = builder.Build();
 
@@ -14,14 +14,14 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    await app.MigrateOrderingAsync();
 }
 
 app.MapDefaultEndpoints();
+app.MapOrderingEndpoints();
 
 app.Run();
 
-// summary: gives WebApplicationFactory a public type to point at (top-level
-// statements make Program internal by default).
-public partial class HostMarker;
+// summary: a named type so tests can point WebApplicationFactory at THIS host
+// without clashing with the other hosts' Program classes.
+public sealed class OrderingServiceMarker;

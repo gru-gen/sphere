@@ -7,14 +7,14 @@ using Sphere.Ordering.Infrastructure;
 
 namespace Sphere.Integration.Tests;
 
-public sealed class HostFactory(PostgresContainer postgresContainer,
+public sealed class OrderingServiceFactory(PostgresContainer postgresContainer,
         HttpClient catalogClient, HttpClient basketClient)
-        : WebApplicationFactory<HostMarker>
+        : WebApplicationFactory<OrderingServiceMarker>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-        builder.UseSetting($"ConnectionStrings:ordering", postgresContainer.ConnectionString);
+        builder.UseSetting("ConnectionStrings:ordering", postgresContainer.OrderingConnectionString);
 
         builder.UseSetting("Catalog:BaseUrl", "http://catalog.test");
         builder.UseSetting("Basket:BaseUrl", "http://basket.test");

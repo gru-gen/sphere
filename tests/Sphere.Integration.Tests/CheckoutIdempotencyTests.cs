@@ -15,19 +15,19 @@ public sealed class CheckoutIdempotencyTests : IDisposable
     private readonly PostgresContainer _postgresContainer;
     private readonly CatalogServiceFactory _catalog;
     private readonly BasketServiceFactory _basket;
-    private readonly HostFactory _host;
+    private readonly OrderingServiceFactory _ordering;
 
     public CheckoutIdempotencyTests(PostgresContainer postgresContainer)
     {
         _postgresContainer = postgresContainer;
         _catalog = new CatalogServiceFactory(_postgresContainer);
         _basket = new BasketServiceFactory(_postgresContainer);
-        _host = new HostFactory(_postgresContainer, _catalog.CreateClient(), _basket.CreateClient());
+        _ordering = new OrderingServiceFactory(_postgresContainer, _catalog.CreateClient(), _basket.CreateClient());
     }
 
     public void Dispose()
     {
-        _host.Dispose();
+        _ordering.Dispose();
         _basket.Dispose();
         _catalog.Dispose();
     }
@@ -50,20 +50,20 @@ public sealed class CheckoutIdempotencyTests : IDisposable
             "/api/products?pageSize=1");
         var productId = browse.GetProperty("items")[0].GetProperty("id").GetGuid();
 
-        var shopClient = _host.CreateClient();
+        var orderingClient = _ordering.CreateClient();
         var customerId = Guid.CreateVersion7();
         var add = await _basket.CreateClient().PostAsJsonAsync(
             $"/api/basket/{customerId}/items", new { productId, quantity = 1 });
         Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
         var key = $"order-{Guid.CreateVersion7()}";
 
-        var firstResponse = await PostCheckoutAsync(shopClient, customerId, key);
+        var firstResponse = await PostCheckoutAsync(orderingClient, customerId, key);
         Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
         var first = await firstResponse.Content.ReadFromJsonAsync<JsonElement>();
 
         // why: the basket is EMPTY now — the first call cleared it. The replay
         // still answers 201 with the SAME order, because it does no work.
-        var secondResponse = await PostCheckoutAsync(shopClient, customerId, key);
+        var secondResponse = await PostCheckoutAsync(orderingClient, customerId, key);
         Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
         var second = await secondResponse.Content.ReadFromJsonAsync<JsonElement>();
 
