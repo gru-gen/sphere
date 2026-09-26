@@ -1,3 +1,5 @@
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -6,9 +8,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Sphere.Ordering.Application;
 using Sphere.Ordering.Application.Cancel;
-using Sphere.Ordering.Application.Checkout;
+using Sphere.Ordering.Application.Pricing;
 using Sphere.Ordering.Behaviors;
 using Sphere.Ordering.Features;
 using Sphere.Ordering.Infrastructure;
@@ -43,13 +46,10 @@ public static class OrderingModule
             client.Timeout = TimeSpan.FromSeconds(2);
         });
 
-        var basketBaseUrl = builder.Configuration["Basket:BaseUrl"]
-            ?? throw new InvalidOperationException("Setting 'Basket:BaseUrl' is missing.");
-        builder.Services.AddHttpClient<ICustomerBasket, HttpCustomerBasket>(client =>
-        {
-            client.BaseAddress = new Uri(basketBaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(2);
-        });
+        var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+            ?? throw new InvalidOperationException("Setting 'Kafka:BootstrapServers' is missing.");
+        builder.Services.AddSingleton(new KafkaSettings(bootstrapServers));
+        builder.Services.AddHostedService<BasketCheckedOutConsumer>();
 
         builder.Services.AddExceptionHandler<ValidationProblemHandler>();
         builder.Services.AddExceptionHandler<DomainProblemHandler>();
@@ -62,15 +62,6 @@ public static class OrderingModule
 
     public static IEndpointRouteBuilder MapOrderingEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/checkout",
-            async Task<Created<CheckoutResult>> (CheckoutCommand command, ISender sender,
-            HttpContext httpContext, CancellationToken cancellationToken) =>
-            {
-                var key = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
-                var result = await sender.Send(command with { IdempotencyKey = key }, cancellationToken);
-                return TypedResults.Created($"/api/orders/{result.OrderId}", result);
-            });
-
         app.MapPost("/api/orders/{id:guid}/cancel",
             async Task<NoContent> (Guid id, ISender sender, CancellationToken cancellationToken) =>
             {
@@ -82,6 +73,44 @@ public static class OrderingModule
         app.MapPost("/api/orders", ListOrders.Handle);
 
         return app;
+    }
+
+    public static async Task EnsureOrderingTopicsAsync(this WebApplication app)
+    {
+        var settings = app.Services.GetRequiredService<KafkaSettings>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("OrderingTopics");
+        using var admin = new AdminClientBuilder(new AdminClientConfig
+        {
+            BootstrapServers = settings.BootstrapServers,
+        }).Build();
+
+        try
+        {
+            await admin.CreateTopicsAsync(
+                [
+                    new TopicSpecification
+                    {
+                        Name = BasketCheckedOutConsumer.RetryTopic,
+                        NumPartitions = 1,
+                        ReplicationFactor = 1
+                    },
+                    new TopicSpecification
+                    {
+                        Name = BasketCheckedOutConsumer.DeadLetterTopic,
+                        NumPartitions = 1,
+                        ReplicationFactor = 1
+                    }
+                ], new CreateTopicsOptions { RequestTimeout = TimeSpan.FromSeconds(3) });
+        }
+        catch (CreateTopicsException e) when (
+            e.Results.All(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
+        {
+            // the second start of the same stack — nothing to do.
+        }
+        catch (KafkaException e)
+        {
+            logger.LogWarning(e, "Ordering topics were not ensured.");
+        }
     }
 
     public static async Task MigrateOrderingAsync(this WebApplication app)

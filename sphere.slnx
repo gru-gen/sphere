@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Sphere.Gateway/Sphere.Gateway.csproj" Id="a20ab43b-c524-4f83-80fb-a315735d2f12" />
-    <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="43ffb1af-d768-47b8-bcbb-3b6f33c4048a" />
     <Project Path="src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj" Id="baa4bc55-959d-4f89-bb9a-177c2c9f00f3" />
   </Folder>
   <Folder Name="/src/Basket/">

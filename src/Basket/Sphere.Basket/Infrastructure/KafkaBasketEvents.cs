@@ -60,10 +60,11 @@ public sealed class KafkaBasketEvents : IBasketEvents, IDisposable
         }
     }
 
-    public async Task PublishCheckedOutAsync(BasketSnapshot basketSnapshot, CancellationToken cancellationToken)
+    public async Task PublishCheckedOutAsync(BasketSnapshot basketSnapshot, Guid checkoutId, CancellationToken cancellationToken)
     {
         var evnt = new BasketCheckedOut(
             Guid.CreateVersion7(),
+            checkoutId,
             basketSnapshot.CustomerId,
             basketSnapshot.Items.Select(i => new BasketCheckedOutItem(i.ProductId, i.Quantity)).ToList(),
             _clock.GetUtcNow());

@@ -22,7 +22,7 @@ public sealed class BasketEventsTests : IClassFixture<KafkaFixture>, IDisposable
     public void Dispose() => _factory.Dispose();
 
     [Fact]
-    public async Task Clearing_a_basket_publishes_one_fact_keyed_by_customer()
+    public async Task Checkout_publishes_one_fact_keyed_by_customer_named_by_the_reply()
     {
         var client = _factory.CreateClient();
         var customerId = Guid.CreateVersion7();
@@ -31,6 +31,8 @@ public sealed class BasketEventsTests : IClassFixture<KafkaFixture>, IDisposable
             new { productId, quantity = 2 });
         Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
 
+        // why: a test-only peek at the topic — the REAL consumer group lives
+        // in the Ordering service and has its own tests.
         using var consumer = new ConsumerBuilder<string, string>(new ConsumerConfig
         {
             BootstrapServers = _bootstrap,
@@ -39,36 +41,38 @@ public sealed class BasketEventsTests : IClassFixture<KafkaFixture>, IDisposable
         }).Build();
         consumer.Subscribe(KafkaBasketEvents.Topic);
 
-        var clear = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, clear.StatusCode);
-        // the idempotent re-clear: still 204 — and, below, still ONE event.
-        var again = await client.DeleteAsync($"/internal/baskets/{customerId}");
-        Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
-
-        static ConsumeResult<string, string>? TryConsume(IConsumer<string, string> consumer, TimeSpan timeout)
+        var key = $"order-{Guid.CreateVersion7()}";
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/checkout")
         {
-            using var cts = new CancellationTokenSource(timeout);
-            try
-            {
-                return consumer.Consume(cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
-        }
+            Content = JsonContent.Create(new { customerId }),
+        };
+        request.Headers.Add("Idempotency-Key", key);
+        var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var orderId = body.GetProperty("orderId").GetGuid();
 
-        var first = TryConsume(consumer, TimeSpan.FromSeconds(20));
+        // the replay: 202 again, same id — and, below, still ONE fact
+        var replay = new HttpRequestMessage(HttpMethod.Post, "/api/checkout")
+        {
+            Content = JsonContent.Create(new { customerId }),
+        };
+        replay.Headers.Add("Idempotency-Key", key);
+        var again = await client.SendAsync(replay);
+        Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
+
+        var first = consumer.Consume(TimeSpan.FromSeconds(20));
         Assert.NotNull(first);
         Assert.Equal(customerId.ToString(), first!.Message.Key);
         var evt = JsonSerializer.Deserialize<JsonElement>(first.Message.Value);
+        Assert.Equal(orderId, evt.GetProperty("checkoutId").GetGuid());
         Assert.Equal(customerId, evt.GetProperty("customerId").GetGuid());
-        var line = evt.GetProperty("items")[0];
-        Assert.Equal(productId, line.GetProperty("productId").GetGuid());
-        Assert.Equal(2, line.GetProperty("quantity").GetInt32());
+        var item = evt.GetProperty("items")[0];
+        Assert.Equal(productId, item.GetProperty("productId").GetGuid());
+        Assert.Equal(2, item.GetProperty("quantity").GetInt32());
 
-        // why: an empty clear announced NOTHING — one checkout, one fact.
-        var second = TryConsume(consumer, TimeSpan.FromSeconds(3));
+        // why: the replay announced NOTHING — one checkout, one fact.
+        var second = consumer.Consume(TimeSpan.FromSeconds(3));
         Assert.Null(second);
     }
 }

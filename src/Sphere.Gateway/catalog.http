@@ -16,7 +16,7 @@ GET {{host}}/api/categories
 POST {{host}}/api/products
 Content-Type: application/json
 
-{ "sku": "SHP-901", "name": "Comet Runner", "price": 79.90,
+{ "sku": "SHP-902", "name": "Comet Runner", "price": 79.90,
   "categoryId": "01a0d3c0-9f44-78eb-97c0-10fd033f4e2a" }
 
 ### Create an invalid product - expect 400 with an errors dictionary

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Sphere.Ordering.Data;
@@ -11,9 +12,11 @@ using Sphere.Ordering.Data;
 namespace Sphere.Ordering.Data.Migrations
 {
     [DbContext(typeof(OrderingDbContext))]
-    partial class OrderingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926111940_RemoveIdempotencyRecord")]
+    partial class RemoveIdempotencyRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,22 +55,6 @@ namespace Sphere.Ordering.Data.Migrations
                         .HasDatabaseName("ix_order_history_order_id");
 
                     b.ToTable("order_history", "ordering");
-                });
-
-            modelBuilder.Entity("Sphere.Ordering.Data.ProcessedEvent", b =>
-                {
-                    b.Property<Guid>("EventId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("event_id");
-
-                    b.Property<DateTimeOffset>("ProcessedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("processed_at_utc");
-
-                    b.HasKey("EventId");
-
-                    b.ToTable("processed_events", "ordering");
                 });
 
             modelBuilder.Entity("Sphere.Ordering.Domain.Order", b =>

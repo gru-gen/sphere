@@ -6,20 +6,13 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ReverseProxy__Clusters__catalog__Destinations__d1__Address=http://sphere.catalog.service:8080/
       - ReverseProxy__Clusters__basket__Destinations__d1__Address=http://sphere.basket.service:8080/
-      - ReverseProxy__Clusters__monolith__Destinations__d1__Address=http://sphere.host:8080/
+      - ReverseProxy__Clusters__ordering__Destinations__d1__Address=http://sphere.ordering.service:8080/
     ports:
       - "5100:8080"
     depends_on:
       - sphere.catalog.service
       - sphere.basket.service
-      - sphere.host
-
-  sphere.host:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-    ports:
-      - "8080"
+      - sphere.ordering.service
 
   sphere.catalog.service:
     environment:
@@ -52,15 +45,15 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=ordering_db;Username=sphere;Password=sphere-dev
       - Catalog__BaseUrl=http://sphere.catalog.service:8080
-      - Basket__BaseUrl=http://sphere.basket.service:8080
+      - Kafka__BootstrapServers=kafka:9092
     ports:
       - "8080"
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
       sphere.catalog.service:
-        condition: service_started
-      sphere.basket.service:
         condition: service_started
 
   postgres:
@@ -118,6 +111,18 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    environment:
+      KAFKA_CLUSTERS_0_NAME: sphere
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://apicurio:8080/apis/ccompat/v7
+      DYNAMIC_CONFIG_ENABLED: "true"
+    ports:
+      - "8082:8080"
+    depends_on:
+      - kafka
 
 
 

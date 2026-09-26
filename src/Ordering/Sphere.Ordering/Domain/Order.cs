@@ -17,6 +17,7 @@ internal sealed class Order : Entity
     public IReadOnlyList<OrderLine> Lines => _lines;
 
     public static Order Place(
+        Guid orderId,
         Guid customerId,
         IReadOnlyList<(Guid ProductId, string Name, Money UnitPrice, int Quantity)> lines,
         TimeProvider clock)
@@ -40,7 +41,7 @@ internal sealed class Order : Entity
 
         var order = new Order
         {
-            Id = Guid.CreateVersion7(),
+            Id = orderId,
             CustomerId = customerId,
             Status = OrderStatus.Placed,
             Currency = currency,

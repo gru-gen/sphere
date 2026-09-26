@@ -44,13 +44,8 @@ public static class BasketModule
             .AddEndpointFilter<ValidationFilter<AddItem.Request>>();
         api.MapDelete("/{customerId:guid}/items/{productId:guid}", RemoveItem.Handle);
 
-        return app;
-    }
-
-    public static IEndpointRouteBuilder MapInternalBasketEndpoints(this IEndpointRouteBuilder app)
-    {
-        app.MapGet("/internal/baskets/{customerId:guid}", InternalBasket.GetSnapshot);
-        app.MapDelete("/internal/baskets/{customerId:guid}", InternalBasket.Clear);
+        app.MapPost("/api/checkout", Checkout.Handle)
+            .AddEndpointFilter<ValidationFilter<Checkout.Request>>();
 
         return app;
     }

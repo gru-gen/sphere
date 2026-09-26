@@ -9,6 +9,8 @@ namespace Sphere.Integration.Tests.Basket;
 public sealed class BasketServiceFactory(PostgresContainer postgresContainer, string? kafkaBootstrap = null)
     : WebApplicationFactory<BasketServiceMarker>
 {
+    public RecordingBasketEvents Events { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -20,16 +22,21 @@ public sealed class BasketServiceFactory(PostgresContainer postgresContainer, st
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<IBasketEvents>();
-                services.AddSingleton<IBasketEvents>(new NoBasketEvents());
+                services.AddSingleton<IBasketEvents>(Events);
             });
         }
     }
 
-    private sealed class NoBasketEvents : IBasketEvents
+    public sealed class RecordingBasketEvents : IBasketEvents
     {
+        public List<(BasketSnapshot Snapshot, Guid OrderId)> Published { get; } = [];
+
         public Task EnsureTopicAsync() => Task.CompletedTask;
 
-        public Task PublishCheckedOutAsync(BasketSnapshot snapshot, CancellationToken ct)
-            => Task.CompletedTask;
+        public Task PublishCheckedOutAsync(BasketSnapshot snapshot, Guid checkoutId, CancellationToken ct)
+        {
+            Published.Add((snapshot, checkoutId));
+            return Task.CompletedTask;
+        }
     }
 }
