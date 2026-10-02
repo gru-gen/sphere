@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Sphere.Catalog.Contracts;
 using Sphere.Catalog.Features.Categories;
 using Sphere.Catalog.Features.Products;
 using Sphere.Catalog.Validation;
@@ -22,6 +23,7 @@ public static class CatalogModule
         builder.Services.AddValidatorsFromAssemblyContaining<CatalogDbContext>(includeInternalTypes: true);
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "catalog-db");
         builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<IProductPriceReader, ProductPriceReader>();
 
         return builder;
     }

@@ -1,0 +1,76 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Sphere.Ordering.Application.Behaviors;
+using Sphere.Ordering.Application.CancelOrder;
+using Sphere.Ordering.Application.Checkout;
+using Sphere.Ordering.Application.ExceptionHandlers;
+using Sphere.Ordering.Features;
+using Sphere.Ordering.Validation;
+
+namespace Sphere.Ordering;
+
+public static class OrderingModule
+{
+    public static IHostApplicationBuilder AddOrderingModule(this IHostApplicationBuilder builder)
+    {
+        var connectionString = builder.Configuration.GetConnectionString("ordering")
+            ?? throw new InvalidOperationException("Connection string 'ordering' is missing.");
+
+        builder.Services.AddDbContext<OrderingDbContext>(o => o.UseNpgsql(connectionString));
+        builder.Services.AddSingleton(new OrderingReadDb(connectionString));
+        builder.Services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(includeInternalTypes: true);
+        builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "ordering-db");
+
+        builder.Services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<OrderingDbContext>();
+            // why: order matters — logging wraps validation wraps the handler.
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+
+        builder.Services.AddExceptionHandler<ValidationProblemHandler>();
+        builder.Services.AddExceptionHandler<DomainProblemHandler>();
+
+        // why: Dapper maps snake_case columns onto record properties.
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+        return builder;
+    }
+
+    public static IEndpointRouteBuilder MapOrderingEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapPost("/api/checkout",
+            async Task<Created<CheckoutResult>> (CheckoutCommand command, ISender sender, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(command, cancellationToken);
+                return TypedResults.Created($"/api/orders/{result.OrderId}", result);
+            });
+
+        app.MapPost("/api/orders/{id:guid}/cancel",
+            async Task<NoContent> (Guid id, ISender sender, CancellationToken cancellationToken) =>
+            {
+                await sender.Send(new CancelOrderCommand(id), cancellationToken);
+                return TypedResults.NoContent();
+            });
+
+        app.MapGet("/api/orders/{id:guid}", GetOrder.Handle);
+        app.MapPost("/api/orders", ListOrders.Handle)
+            .AddEndpointFilter<ValidationFilter<ListOrders.Request>>();
+
+        return app;
+    }
+
+    public static async Task MigrateOrderingAsync(this WebApplication app)
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<OrderingDbContext>()
+            .Database.MigrateAsync();
+    }
+}

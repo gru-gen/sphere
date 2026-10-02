@@ -3,9 +3,12 @@
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="0fc4511b-e9db-4d41-89c7-d383e073dc96" />
   </Folder>
   <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Sphere.Basket/Sphere.Basket.csproj" Id="bd775f2c-d0ec-4566-8675-66f0e448aa64" />
     <Project Path="src/Modules/Sphere.Catalog/Sphere.Catalog.csproj" Id="4e1d9420-7564-42ac-aaf9-f49eecfa606c" />
+    <Project Path="src/Modules/Sphere.Ordering/Sphere.Ordering.csproj" Id="e976608f-caf5-4c8e-9d66-cc3660553b1a" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="be7bb948-eea8-42af-83fd-fcc87b0aacfc" />
+    <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="c149a305-3cee-4baf-b698-efed97045316" />
   </Folder>
 </Solution>
