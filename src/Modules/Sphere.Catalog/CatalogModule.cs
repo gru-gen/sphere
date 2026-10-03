@@ -33,6 +33,7 @@ public static class CatalogModule
         var api = app.MapGroup("/api");
 
         api.MapGet("/products", GetProducts.Handle);
+        api.MapGet("/products/scroll", ScrollProducts.Handle);
         api.MapGet("/products/{id:guid}", GetProductById.Handle);
         api.MapPost("/products", CreateProduct.Handle)
             .AddEndpointFilter<ValidationFilter<CreateProduct.Request>>();

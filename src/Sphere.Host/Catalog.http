@@ -26,3 +26,9 @@ Content-Type: application/json
 
 { "sku": "bad sku", "name": "", "price": 0,
   "categoryId": "00000000-0000-0000-0000-000000000000" }
+
+### Scroll: the first page of deep browsing - expect 200 OK with items and a next cursor
+GET {{host}}/api/products/scroll?pageSize=5
+
+### Scroll: the NEXT page - paste nextAfterName and nextAfterId from the response above; expect 200 OK
+GET {{host}}/api/products/scroll?pageSize=5&afterName=Bolt%20Boot&afterId=01a0fc15-ac85-70a1-8003-77640db88b15
