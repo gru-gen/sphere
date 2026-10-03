@@ -14,21 +14,21 @@ WORKDIR /src
 COPY ["global.json", "."]
 COPY ["Directory.Packages.props", "."]
 COPY ["Directory.Build.props", "."]
-COPY ["src/Sphere.Host/Sphere.Host.csproj", "src/Sphere.Host/"]
-COPY ["src/Modules/Sphere.Ordering/Sphere.Ordering.csproj", "src/Modules/Sphere.Ordering/"]
+COPY ["src/Sphere.Basket.Service/Sphere.Basket.Service.csproj", "src/Sphere.Basket.Service/"]
+COPY ["src/Modules/Sphere.Basket/Sphere.Basket.csproj", "src/Modules/Sphere.Basket/"]
 COPY ["src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj", "src/Sphere.ServiceDefaults/"]
-RUN dotnet restore "./src/Sphere.Host/Sphere.Host.csproj"
+RUN dotnet restore "./src/Sphere.Basket.Service/Sphere.Basket.Service.csproj"
 COPY . .
-WORKDIR "/src/src/Sphere.Host"
-RUN dotnet build "./Sphere.Host.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/src/Sphere.Basket.Service"
+RUN dotnet build "./Sphere.Basket.Service.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Sphere.Host.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Sphere.Basket.Service.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Sphere.Host.dll"]
+ENTRYPOINT ["dotnet", "Sphere.Basket.Service.dll"]

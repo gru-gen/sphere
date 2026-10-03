@@ -39,6 +39,16 @@ public static class BasketModule
         return app;
     }
 
+    public static IEndpointRouteBuilder MapInternalBasketEndpoints(this IEndpointRouteBuilder app)
+    {
+        // why: a separate mapping on purpose — a host that does not call this
+        // method simply has no internal surface at all.
+        app.MapGet("/internal/baskets/{customerId:guid}", InternalBasket.GetSnapshot);
+        app.MapDelete("/internal/baskets/{customerId:guid}", InternalBasket.Clear);
+
+        return app;
+    }
+
     public static async Task MigrateBasketAsync(this WebApplication app)
     {
         await using var scope = app.Services.CreateAsyncScope();

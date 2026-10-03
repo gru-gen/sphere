@@ -1,13 +1,11 @@
-using Scalar.AspNetCore;
-using Sphere.Ordering;
+using Sphere.Basket;
 using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
-builder.AddOrderingModule();
+builder.AddBasketModule();
 
 var app = builder.Build();
 
@@ -16,13 +14,14 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-    await app.MigrateOrderingAsync();
+    await app.MigrateBasketAsync();
 }
 
 app.MapDefaultEndpoints();
+app.MapBasketEndpoints();
 
-app.MapOrderingEndpoints();
+// why: only the standalone service opens the internal door — checkout's
+// surface, invisible from outside the network.
+app.MapInternalBasketEndpoints();
 
 app.Run();

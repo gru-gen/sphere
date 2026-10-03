@@ -4,7 +4,7 @@
 GET {{host}}/api/products?pageSize=5
 
 ### One product by id - expect 200 OK
-GET {{host}}/api/products/01a10190-f6fe-73bb-b1bb-94ad4211fc1c
+GET {{host}}/api/products/01a101ab-1a59-7ad8-9570-7bf40c917020
 
 ### Unknown id - expect 404 Not Found
 GET {{host}}/api/products/00000000-0000-0000-0000-000000000000
@@ -17,7 +17,7 @@ POST {{host}}/api/products
 Content-Type: application/json
 
 { "sku": "SHP-901", "name": "Comet Runner", "price": 79.90,
-  "categoryId": "01a10190-f6fa-7129-b601-c8c3b72bf4e0" }
+  "categoryId": "01a101ab-1a57-7b3c-9d08-dd39715aee86" }
 
 ### Create an invalid product - expect 400 with an errors dictionary
 ### (bad sku format, empty name, price out of range, empty category id)

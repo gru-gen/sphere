@@ -40,6 +40,16 @@ public static class OrderingModule
             client.Timeout = TimeSpan.FromSeconds(2);
         });
 
+        // why: the second consumer-owned port gets the same treatment — one
+        // typed client, one base address, one 2-second budget.
+        var basketBaseUrl = builder.Configuration["Basket:BaseUrl"]
+            ?? throw new InvalidOperationException("Setting 'Basket:BaseUrl' is missing.");
+        builder.Services.AddHttpClient<ICustomerBasket, HttpCustomerBasket>(client =>
+        {
+            client.BaseAddress = new Uri(basketBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(2);
+        });
+
         builder.Services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<OrderingDbContext>();
@@ -54,15 +64,21 @@ public static class OrderingModule
         // why: Dapper maps snake_case columns onto record properties.
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
+        builder.Services.AddSingleton(TimeProvider.System);
+
         return builder;
     }
 
     public static IEndpointRouteBuilder MapOrderingEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/checkout",
-            async Task<Created<CheckoutResult>> (CheckoutCommand command, ISender sender, CancellationToken cancellationToken) =>
+            async Task<Created<CheckoutResult>> (CheckoutCommand command, HttpContext httpContext,
+                ISender sender, CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(command, cancellationToken);
+                // why: the key is TRANSPORT metadata, not business payload — it
+                // arrives as a header and joins the command at the door.
+                var key = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+                var result = await sender.Send(command with { IdempotencyKey = key }, cancellationToken);
                 return TypedResults.Created($"/api/orders/{result.OrderId}", result);
             });
 

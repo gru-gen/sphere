@@ -40,3 +40,19 @@ monolith 5110, catalog 5120). Deltas against the baseline table:
 The first cut moved exactly the number it cited — the deploy blast
 radius for catalog changes — and no other. That is what ADR-010 calls
 success.
+
+## After the second cut
+
+Same method, same machine — now four processes (gateway 5100, monolith
+5110, catalog 5120, basket 5130). Deltas against the first cut table:
+
+| Run | After the first cut | After the second cut | Reading |
+|---|---|---|---|
+| browse.js p95, through the gateway | 2.8 ms | 1.07 ms | -1.43 ms | the 10 s output cache answers most reads AT the edge — the catalog sees a trickle |
+| shop.js p95 | 4.5 ms | 6.06 ms | + 1.56 ms | checkout crosses the wire twice now: prices in, basket clear out |
+| basket restart, during shop.js | — | basket steps fail for ~6 s; browse untouched | the new blast radius, named — the 2 s budget caps each call's pain |
+| spike.js | 3.9 ms | 2.4 ms | - 1.5 ms |
+
+The browse number is a gift with a price tag: up to ten seconds of
+staleness at the front door. The checkout number is the
+dual write's travel cost.

@@ -7,6 +7,7 @@ internal sealed class OrderingDbContext(
 {
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderHistoryEntry> OrderHistories => Set<OrderHistoryEntry>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

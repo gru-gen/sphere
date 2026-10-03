@@ -11,7 +11,18 @@ builder.AddServiceDefaults();
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+// why: ten seconds of shared memory at the edge absorbs read storms the
+// catalog never sees. The price is honesty: a product edit can be up to ten
+// seconds late at the front door — chosen, written down, revisited when a
+// real cache tier arrives.
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("catalog-10s", policy => policy.Expire(TimeSpan.FromSeconds(10)));
+});
+
 var app = builder.Build();
+
+app.UseOutputCache();
 
 app.MapDefaultEndpoints();
 

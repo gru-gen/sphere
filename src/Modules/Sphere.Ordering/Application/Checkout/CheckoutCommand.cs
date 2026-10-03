@@ -1,38 +1,53 @@
 using FluentValidation;
-using Sphere.Basket.Contracts;
 
 namespace Sphere.Ordering.Application.Checkout;
 
-public sealed record CheckoutCommand(Guid CustomerId) : IRequest<CheckoutResult>;
+public sealed record CheckoutCommand(Guid CustomerId, string? IdempotencyKey = null) : IRequest<CheckoutResult>;
 public sealed record CheckoutResult(Guid OrderId, decimal Total, string Currency);
 
 internal sealed class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
 {
-    public CheckoutCommandValidator() => RuleFor(x => x.CustomerId).NotEmpty();
+    public CheckoutCommandValidator()
+    {
+        RuleFor(x => x.CustomerId).NotEmpty();
+        RuleFor(x => x.IdempotencyKey).MaximumLength(200);
+    } 
 }
 
 // summary: the checkout use case — basket in, order out, basket cleared.
 internal sealed class CheckoutCommandHandler(
-    IBasketStore basketStore,
+    ICustomerBasket customerBasket,
     IProductPriceReader productPriceReader,
     OrderingDbContext dbContext,
     TimeProvider clock) : IRequestHandler<CheckoutCommand, CheckoutResult>
 {
     private const string Currency = "EUR";
 
-    public async Task<CheckoutResult> Handle(CheckoutCommand command, CancellationToken ct)
+    public async Task<CheckoutResult> Handle(CheckoutCommand command, CancellationToken cancellationToken)
     {
-        var basket = await basketStore.GetAsync(command.CustomerId, ct);
-        if (basket.Items.Count == 0)
+        if (command.IdempotencyKey is { } key)
+        {
+            // why: a replay answers from the table and does NO work — no basket
+            // read, no prices, no order. That is the entire promise of the key.
+            var seen = await dbContext.IdempotencyRecords.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Key == key, cancellationToken);
+            if (seen is not null)
+            {
+                return new CheckoutResult(seen.OrderId, seen.Total, seen.Currency);
+            }
+        }
+
+        var basket = await customerBasket.GetAsync(command.CustomerId, cancellationToken);
+        if (basket.Lines.Count == 0)
         {
             throw new DomainException("The basket is empty.");
         }
 
         // why: prices come from the catalog AT CHECKOUT — never from the client.
         var priceMap = await productPriceReader.GetAsync(
-            [.. basket.Items.Select(i => i.ProductId)], ct);
+            [.. basket.Lines.Select(i => i.ProductId)], cancellationToken);
 
-        var lines = basket.Items.Select(item =>
+        var lines = basket.Lines.Select(item =>
         {
             if (!priceMap.TryGetValue(item.ProductId, out var price))
             {
@@ -43,11 +58,38 @@ internal sealed class CheckoutCommandHandler(
 
         var order = Order.Place(command.CustomerId, lines, clock);
         dbContext.Orders.Add(order);
-        await dbContext.SaveEntitiesAsync(ct);
+        if (command.IdempotencyKey is { } newKey)
+        {
+            // why: the key row rides the SAME transaction as the order —
+            // either both commit or neither. The primary key is the fence.
+            dbContext.IdempotencyRecords.Add(new IdempotencyRecord
+            {
+                Key = newKey,
+                OrderId = order.Id,
+                Total = order.Total,
+                Currency = order.Currency,
+                CreatedAtUtc = clock.GetUtcNow(),
+            });
+        }
 
-        // tradeoff: a second, separate commit (ADR-005). If the clear fails, the order
-        // exists and the basket lingers.
-        await basketStore.ClearAsync(command.CustomerId, ct);
+        try
+        {
+            await dbContext.SaveEntitiesAsync(cancellationToken);
+        }
+        catch (DbUpdateException) when (command.IdempotencyKey is not null)
+        {
+            // why: two racers, one fence — the loser's whole transaction (order
+            // included) rolled back on the duplicate key. Hand back the
+            // winner's answer instead of a second order.
+            var winner = await dbContext.IdempotencyRecords.AsNoTracking()
+                .FirstAsync(r => r.Key == command.IdempotencyKey, cancellationToken);
+            return new CheckoutResult(winner.OrderId, winner.Total, winner.Currency);
+        }
+
+        // tradeoff: the ADR-005 seam, now stretched across a NETWORK. The order
+        // is committed here; the clear happens in another process. If it fails,
+        // the order exists and the basket lingers — the dual write, named.
+        await customerBasket.ClearAsync(command.CustomerId, cancellationToken);
 
         return new CheckoutResult(order.Id, order.Total, order.Currency);
     }
