@@ -11,6 +11,7 @@ using Sphere.Ordering.Application.CancelOrder;
 using Sphere.Ordering.Application.Checkout;
 using Sphere.Ordering.Application.ExceptionHandlers;
 using Sphere.Ordering.Features;
+using Sphere.Ordering.Infrastructure;
 using Sphere.Ordering.Validation;
 
 namespace Sphere.Ordering;
@@ -26,6 +27,18 @@ public static class OrderingModule
         builder.Services.AddSingleton(new OrderingReadDb(connectionString));
         builder.Services.AddValidatorsFromAssemblyContaining<OrderingDbContext>(includeInternalTypes: true);
         builder.Services.AddHealthChecks().AddNpgSql(connectionString, name: "ordering-db");
+
+        // why: prices now live in another PROCESS. A typed client carries the
+        // base address and the first timeout budget in one place.
+        var catalogBaseUrl = builder.Configuration["Catalog:BaseUrl"]
+            ?? throw new InvalidOperationException("Setting 'Catalog:BaseUrl' is missing.");
+        builder.Services.AddHttpClient<IProductPriceReader, CatalogHttpPriceReader>(client =>
+        {
+            client.BaseAddress = new Uri(catalogBaseUrl);
+            // why: fail in 2 seconds, not in 100 — a hung checkout holds a
+            // request thread AND a database connection (the pool math).
+            client.Timeout = TimeSpan.FromSeconds(2);
+        });
 
         builder.Services.AddMediatR(cfg =>
         {

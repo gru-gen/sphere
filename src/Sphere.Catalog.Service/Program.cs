@@ -1,14 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Scalar.AspNetCore;
-using Sphere.Basket;
-using Sphere.Ordering;
+using Sphere.Catalog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
-builder.AddBasketModule();
-builder.AddOrderingModule();
+builder.AddCatalogModule();
 
 var app = builder.Build();
 
@@ -17,16 +13,16 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-    await app.MigrateBasketAsync();
-    await app.MigrateOrderingAsync();
+    await app.SeedCatalogAsync();
 }
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready");
 
-app.MapBasketEndpoints();
-app.MapOrderingEndpoints();
+app.MapCatalogEndpoints();
+
+// why: only the standalone service opens the internal door. The gateway has
+// no route for /internal, so this surface is invisible from outside.
+app.MapInternalCatalogEndpoints();
 
 app.Run();

@@ -1,0 +1,14 @@
+@host = http://localhost:5120
+
+### The internal price door - called DIRECT at the service; the gateway has no /internal route
+### expect 200 OK with a PriceLine per EXISTING id
+POST {{host}}/internal/prices
+Content-Type: application/json
+
+{ "productIds": ["01a100bb-e681-735f-9eec-524f002ece5a", "01a100bb-e681-78eb-96f4-aa31a316701d"] }
+
+### Ask for an unknown id - it is simply absent from the answer; the CALLER decides if that is an error
+POST {{host}}/internal/prices
+Content-Type: application/json
+
+{ "productIds": ["00000000-0000-0000-0000-000000000000"] }
