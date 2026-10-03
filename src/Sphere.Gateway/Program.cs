@@ -1,10 +1,10 @@
 // summary: the strangler facade — ONE public door that decides, per route,
 // whether the monolith or a new service answers. Clients never notice a cut.
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Sphere.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.AddServiceDefaults();
 
 // why: the whole route table lives in configuration — moving a route is a
 // config change and a restart, not a code change and a release.
@@ -13,8 +13,7 @@ builder.Services.AddReverseProxy()
 
 var app = builder.Build();
 
-
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapDefaultEndpoints();
 
 app.MapReverseProxy();
 

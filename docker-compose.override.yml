@@ -1,0 +1,62 @@
+services:
+
+  sphere.host:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__basket=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
+      - ConnectionStrings__ordering=Host=postgres;Port=5432;Database=sphere;Username=sphere;Password=sphere-dev
+        # why: inside the network, services are found by NAME, not by port maps.
+      - Catalog__BaseUrl=http://sphere.catalog.service:8080
+    ports:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sphere.catalog.service:
+        condition: service_started
+
+  sphere.gateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ReverseProxy__Clusters__catalog__Destinations__d1__Address=http://sphere.catalog.service:8080/
+      - ReverseProxy__Clusters__monolith__Destinations__d1__Address=http://sphere.host:8080/
+    ports:
+      # why: the ONLY published port. The monolith and the catalog exist
+      # solely on the compose network — /internal is now unreachable from
+      # the outside by construction, not just by a missing route.
+      - "5100:8080"
+    depends_on:
+      - sphere.catalog.service
+      - sphere.host
+
+  sphere.catalog.service:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__catalog=Host=postgres;Port=5432;Database=catalog_db;Username=sphere;Password=sphere-dev
+    ports:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    environment:
+      POSTGRES_USER: sphere
+      POSTGRES_PASSWORD: sphere-dev
+      POSTGRES_DB: sphere
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # why: creates catalog_db once, on first start of an empty volume.
+      - ./tools/compose/init-catalog-db.sql:/docker-entrypoint-initdb.d/10-catalog-db.sql
+    healthcheck:
+      # why: "healthy" must mean "accepting SQL", not "process exists" —
+      # the services below gate their start on THIS answer.
+      test: ["CMD-SHELL", "pg_isready -U shopsphere -d shopsphere"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    ports:
+      - "5433:5432"
+

@@ -3,6 +3,7 @@
     <Project Path="src/Sphere.Catalog.Service/Sphere.Catalog.Service.csproj" Id="979726bd-b6a2-481f-8c21-a4b1513913bb" />
     <Project Path="src/Sphere.Gateway/Sphere.Gateway.csproj" Id="a7779a6e-dccd-47d1-b916-3a67f60e5200" />
     <Project Path="src/Sphere.Host/Sphere.Host.csproj" Id="0fc4511b-e9db-4d41-89c7-d383e073dc96" />
+    <Project Path="src/Sphere.ServiceDefaults/Sphere.ServiceDefaults.csproj" Id="aa99b53b-6857-4a5f-94cc-0b6b9321d732" />
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Sphere.Basket/Sphere.Basket.csproj" Id="bd775f2c-d0ec-4566-8675-66f0e448aa64" />
@@ -13,4 +14,7 @@
     <Project Path="tests/Sphere.Catalog.Tests/Sphere.Catalog.Tests.csproj" Id="be7bb948-eea8-42af-83fd-fcc87b0aacfc" />
     <Project Path="tests/Sphere.Ordering.Tests/Sphere.Ordering.Tests.csproj" Id="c149a305-3cee-4baf-b698-efed97045316" />
   </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>
